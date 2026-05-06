@@ -1,0 +1,69 @@
+// this is an example of some language constructs
+
+struct foo {
+	int test;
+}
+
+mutable int blah = 123
+
+int main(int argc, char*[] argv) {
+	char *foo = "foo";
+
+	int[] list = { 1, 2, 3 };
+	// double (*binary_op) (double, double);
+
+	// prototype for code 'blocks'
+	//int{int} foo = (int i){
+	//	if (true)
+	//		1
+	//	else
+	//		0
+	//}
+
+	int foobar = loop(int acc = 0, int[] list = list) {
+		if (len(list) == 0) {
+			return acc;
+		}
+		else {
+			loop(acc + 1, list[1..]);
+		}
+	}
+
+	// the above code compiles down to something like this:
+	//
+	// int list[] = { 1, 2, 3 };
+	// int foobar;
+	// int foorbar_acc = 0;
+	// int foorbar_list[] = list;
+	// while (true) {
+	// 	if (array_len(foorbar_list) == 0) {
+	// 		foobar = 0;
+	// 		break;
+	// 	}
+	// 	else {
+	// 		foorbar_acc = foorbar_acc + 1;
+	// 		foorbar_list = array_slice(1, -1);
+	// 	}
+	// }
+
+	loop(int i) {
+		if (loop > 10)
+			return;
+		printf("%s: %d (blah: )", foo, i, blah);
+		blah++;
+		loop(i + 1);
+	}
+
+	int foo = {
+		if (true) {
+			1;
+		}
+	}
+
+
+	return foo;
+	// scoped malloc???
+	// defer??
+	// malloc+define call in one?
+}
+

@@ -1,0 +1,77 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-Wall",
+      "-Wextra",
+      "-pedantic",
+      "-o",
+      "./.temp-run",
+      "./build.c"
+    ],
+    "directory": "/mnt/D-Files/langs/C/ShepLang",
+    "file": "/mnt/D-Files/langs/C/ShepLang/build.c",
+    "output": "/mnt/D-Files/langs/C/ShepLang/.temp-run"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-Wall",
+      "-Wextra",
+      "-pedantic",
+      "-o",
+      "./.temp-run",
+      "./build_scripts/utils.c"
+    ],
+    "directory": "/mnt/D-Files/langs/C/ShepLang",
+    "file": "/mnt/D-Files/langs/C/ShepLang/build_scripts/utils.c",
+    "output": "/mnt/D-Files/langs/C/ShepLang/.temp-run"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-Wall",
+      "-Wextra",
+      "-pedantic",
+      "-o",
+      "./.temp-run",
+      "./build_scripts/args.c"
+    ],
+    "directory": "/mnt/D-Files/langs/C/ShepLang",
+    "file": "/mnt/D-Files/langs/C/ShepLang/build_scripts/args.c",
+    "output": "/mnt/D-Files/langs/C/ShepLang/.temp-run"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-Wall",
+      "-Wextra",
+      "-pedantic",
+      "-o",
+      "./shep",
+      "main.c"
+    ],
+    "directory": "/mnt/D-Files/langs/C/ShepLang",
+    "file": "/mnt/D-Files/langs/C/ShepLang/main.c",
+    "output": "/mnt/D-Files/langs/C/ShepLang/shep"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-Wall",
+      "-Wextra",
+      "-pedantic",
+      "-o",
+      "./shep",
+      "string_utils.c"
+    ],
+    "directory": "/mnt/D-Files/langs/C/ShepLang",
+    "file": "/mnt/D-Files/langs/C/ShepLang/string_utils.c",
+    "output": "/mnt/D-Files/langs/C/ShepLang/shep"
+  }
+]
