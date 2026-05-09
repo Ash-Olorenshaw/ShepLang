@@ -10,6 +10,8 @@ char *ltrim(char *str) {
 }
 
 char *rtrim(char *str) {
+	if (strlen(str) == 0)
+		return str;
 	char* back = str + strlen(str);
 	while(isspace(*--back));
 	*(back + 1) = '\0';
@@ -43,7 +45,7 @@ char *substr(const char *str, int start, int end) {
 
 bool starts_with(const char *str, const char *start) {
 	char *temp_str = substr(str, 0, strlen(start));
-	bool matches = strcmp(temp_str, start);
+	bool matches = strcmp(temp_str, start) == 0;
 	free(temp_str);
 	return matches;
 }
@@ -89,15 +91,42 @@ int char_count(const char *str, int start, char c) {
 	return count;
 }
 
+enum {
+	CHAR_ALPHA,
+	CHAR_NUM,
+	CHAR_SYMBOL,
+	CHAR_SPACE,
+	CHAR_UNKNOWN
+} char_type(char c) {
+	if (isspace(c))
+		return CHAR_SPACE;
+	else if (isalpha(c))
+		return CHAR_ALPHA;
+	else if (isdigit(c))
+		return CHAR_NUM; //  / % > < = & | ^ ~ ! ? : [ ] ( ) .
+	else if (c == '+' || c == '-' || c == '*' ||
+			 c == '/' || c == '%' || c == '>' ||
+			 c == '<' || c == '=' || c == '&' ||
+			 c == '|' || c == '^' || c == '~' ||
+			 c == '!' || c == '?' || c == ':' ||
+			 c == '.' || c == '[' || c == ']' ||
+			 c == '(' || c == ')')
+		return CHAR_SYMBOL;
+	return CHAR_UNKNOWN;
+}
+
 char *remove_unnecessary_whitespace(char *str) {
 	char temp_str[strlen(str) + 1];
 	int pos = 0, str_len = strlen(str);
+	int prev_char_type = CHAR_UNKNOWN, next_char_type = CHAR_UNKNOWN;
 	for (int i = 0; i < (int) str_len; i++) {
-		if (isspace(str[i]) && i + 1 != str_len && i != 0 && pos != 0 && (isalnum(temp_str[pos - 1]) || isalnum(str[i + 1])))
+		next_char_type = i + 1 != str_len ? char_type(str[i + 1]) : CHAR_UNKNOWN;
+		prev_char_type = pos != 0 ? char_type(temp_str[pos - 1]) : CHAR_UNKNOWN;
+
+		if (isspace(str[i]) && i + 1 != str_len && i != 0 && pos != 0 && (next_char_type == prev_char_type || next_char_type == CHAR_SPACE || (next_char_type == CHAR_NUM && prev_char_type == CHAR_ALPHA)))
 			temp_str[pos++] = str[i];
 		else if (!isspace(str[i]))
 			temp_str[pos++] = str[i];
-
 	}
 	temp_str[pos] = '\0';
 

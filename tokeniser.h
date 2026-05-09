@@ -19,7 +19,7 @@ typedef struct {
 		struct {
 			char *name;
 			c_type type;
-			// token array
+			rarray *val; // tkn
 		} var_definition;
 		struct {
 			char *name;
@@ -30,8 +30,7 @@ typedef struct {
 			char *content;
 		} macro;
 		struct {
-			char *content;
-			// token array
+			rarray *tkns; // tkn
 		} statement;
 		struct {
 			c_type type;
@@ -43,10 +42,11 @@ typedef struct {
 	};
 } tkn_line;
 
+extern char *tkn_names[];
+
 typedef struct {
 	enum {
-		LITERAL_INT,
-		LITERAL_FLOAT,
+		LITERAL_NUMBER,
 		LITERAL_CHAR,
 		LITERAL_STRING,
 		IDENTIFIER,
@@ -62,12 +62,16 @@ typedef struct {
 		IDENTIFIER_DEFAULT,
 		IDENTIFIER_GOTO,
 		IDENTIFIER_SIZEOF,
-		OPERATOR, // + - * / % ++ -- > < <= >= & | ^ ~ << >> == != && || ! `? :` `[]` -> . * &
+		OPERATOR, // + - * / % ++ -- > < <= >= & | ^ ~ << >> == != && || ! `? :` -> . * &
 		OPERATOR_ASSIGN, // = += -= *= /= %= &= |= ^= <<= >>=
+		OPERATOR_SLICE, // []
 		CONTAINER, // ()
 		CONTAINER_BLOCK, // {}
 	} type;
-	char *content;
+	union {
+		char *content;
+		rarray *tkn_content;
+	};
 } tkn;
 
 int tokenise(rarray *file_lines);
