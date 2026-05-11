@@ -109,7 +109,7 @@ rarray *tokenise_line(const char *line, bool print) {
 					if (c == '"' || c == '\'')
 						new_tkn->content = strdup(selection);
 					else
-						new_tkn->tkn_content = tokenise_line(selection, false);
+						new_tkn->tkn_content = tokenise_line(substr(selection, 1, strlen(selection)), false);
 					rarray_add(line_tkns, new_tkn);
 					selection[0] = c;
 				}
@@ -117,15 +117,18 @@ rarray *tokenise_line(const char *line, bool print) {
 					depth--;
 			}
 		}
-		else if (current_type == prev_type || ((c == '_' || current_type == CHAR_NUM) && prev_type == CHAR_ALPHA) || i == 0) // TODO - all number variants: 0xFF 0.1 42 42u 42L 42UL, plus allow numbers in var names
+		else if (current_type == prev_type || ((c == '_' || current_type == CHAR_NUM) && prev_type == CHAR_ALPHA) || i == 0) { // TODO - all number variants: 0xFF 0.1 42 42u 42L 42UL
+			if (i == 0)
+				prev_type = current_type;
 			selection[selection_pos++] = c;
+		}
 		else {
+			selection[selection_pos] = '\0';
+			selection_pos = 0;
 			if (c == '[' || c == '(' || c == '{' || c == '"' || c == '\'')
 				seeking = c == '[' ? ']' : c == '(' ? ')' : c == '{' ? '}' : c;
 
 			if (prev_type == CHAR_SYMBOL) {
-				selection[selection_pos] = '\0';
-				selection_pos = 0;
 				tkn *new_tkn = malloc(sizeof(tkn));
 				new_tkn->content = strdup(selection);
 				if (strchr(selection, '=') != NULL && strcmp(selection, "==") != 0 && strcmp(selection, "!=") != 0 && strcmp(selection, ">=") != 0 && strcmp(selection, "<=") != 0)
@@ -133,11 +136,8 @@ rarray *tokenise_line(const char *line, bool print) {
 				else
 					new_tkn->type = OPERATOR;
 				rarray_add(line_tkns, new_tkn);
-				selection[0] = c;
 			}
 			else if (prev_type == CHAR_NUM) {
-				selection[selection_pos] = '\0';
-				selection_pos = 0;
 				tkn *new_tkn = malloc(sizeof(tkn));
 				new_tkn->type = LITERAL_NUMBER;
 				new_tkn->content = strdup(selection);
@@ -145,8 +145,6 @@ rarray *tokenise_line(const char *line, bool print) {
 				selection[0] = c;
 			}
 			else if (prev_type == CHAR_ALPHA) {
-				selection[selection_pos] = '\0';
-				selection_pos = 0;
 				tkn *new_tkn = malloc(sizeof(tkn));
 				new_tkn->content = strdup(selection);
 
@@ -180,16 +178,11 @@ rarray *tokenise_line(const char *line, bool print) {
 				rarray_add(line_tkns, new_tkn);
 			}
 
-
 			selection[selection_pos++] = c;
+			// printf("ELSE: %c : PREV: %c (%d)\n", c, line[i - 1], prev_type);
 			prev_type = current_type;
 		}
 	}
-
-	// tkn_line *new_tkn = malloc(sizeof(tkn_line));
-	// new_tkn->type = STATEMENT;
-	// new_tkn->statement.tkns = line_tkns;
-	// rarray_add(token_lines, new_tkn);
 
 	if (print) {
 		printf("\nLINE '%s' vvv\n", line);
