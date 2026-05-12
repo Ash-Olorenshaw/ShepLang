@@ -8,6 +8,7 @@ char *rtrim(char *str);
 char *trim(char *str);
 
 bool starts_with(const char *str, const char *start);
+bool ends_with(const char *str, const char *end);
 char *substr(const char *str, int start, int end);
 int find_closing_bracket(const char *str, int start, bool rev);
 int seek_char(const char *str, int start, char c);

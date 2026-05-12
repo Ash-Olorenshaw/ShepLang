@@ -1,12 +1,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <ctype.h>
 #include "./string_utils.h"
 #include "./arrays.h"
-#include "./utils.h"
-#include "./types.h"
 #include "./tokeniser.h"
+#include "./utils.h"
 
 char *tkn_names[] = {
 	"LITERAL_NUMBER",
@@ -179,7 +177,6 @@ rarray *tokenise_line(const char *line, bool print) {
 			}
 
 			selection[selection_pos++] = c;
-			// printf("ELSE: %c : PREV: %c (%d)\n", c, line[i - 1], prev_type);
 			prev_type = current_type;
 		}
 	}
@@ -208,11 +205,57 @@ int tokenise(rarray *file_lines) {
 		remove_unnecessary_whitespace(line);
 
 		if (is_c_macro(line)) {
-			tkn_line *new_tkn = create_tknline(MACRO, line);
+			tkn_line *new_tkn = malloc(sizeof(tkn_line));
+			new_tkn->type = MACRO;
+			new_tkn->macro.content = line;
+			rarray_add(token_lines, new_tkn);
+		}
+		else if (line[strlen(line) - 1] == ':') {
+			tkn_line *new_tkn = malloc(sizeof(tkn_line));
+			new_tkn->type = LABEL;
+			new_tkn->label.name = substr(line, 0, strlen(line) - 1);
 			rarray_add(token_lines, new_tkn);
 		}
 		else {
-			tokenise_line(line, true);
+			rarray *tkns = tokenise_line(line, true);
+			tkn *tkn_1 = (tkn *) tkns->items[0];
+			if (tkn_1->type == IDENTIFIER && (
+					strcmp(tkn_1->content, "const") == 0 ||
+					strcmp(tkn_1->content, "struct") == 0 ||
+					strcmp(tkn_1->content, "union") == 0 ||
+					strcmp(tkn_1->content, "enum") == 0 ||
+					strcmp(tkn_1->content, "signed") == 0 ||
+					strcmp(tkn_1->content, "unsigned") == 0 ||
+					strcmp(tkn_1->content, "short") == 0 ||
+					strcmp(tkn_1->content, "long") == 0 ||
+					strcmp(tkn_1->content, "int") == 0 ||
+					strcmp(tkn_1->content, "float") == 0 ||
+					strcmp(tkn_1->content, "double") == 0 ||
+					strcmp(tkn_1->content, "char") == 0 ||
+					strcmp(tkn_1->content, "bool") == 0
+				)) {
+				int i, assignments = 0, assignment_pos = -1;
+				tkn *target;
+				RARRAY_FOREACH(target, tkns, i) {
+					if (target->type == OPERATOR_ASSIGN)
+						assignments += 1;
+					if (assignments == 1)
+						assignment_pos = i;
+				}
+
+				if (assignments > 1)
+					raise_err("Cannot have multiple top-level variable assignments");
+				else if (assignments == 1) {
+					tkn_line *new_tkn = malloc(sizeof(tkn_line));
+					new_tkn->type = VAR_DEFINITION;
+					new_tkn->var_definition.val;
+					rarray_add(token_lines, new_tkn);
+				}
+				else {
+
+				}
+			}
+
 		}
 		// else if (is_var_def(line)) {
 		// 	var_info *var = extract_var_info(line);

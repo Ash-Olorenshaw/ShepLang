@@ -50,6 +50,18 @@ bool starts_with(const char *str, const char *start) {
 	return matches;
 }
 
+bool ends_with(const char *str, const char *end) {
+	int string_len = strlen(str);
+	int end_len = strlen(str);
+	if (end_len > string_len)
+		return false;
+
+	char *temp_str = substr(str, strlen(str) - strlen(end), strlen(str));
+	bool matches = strcmp(temp_str, end) == 0;
+	free(temp_str);
+	return matches;
+}
+
 int find_closing_bracket(const char *str, int start, bool rev) {
 	int nested = 0;
 	if (rev) {
