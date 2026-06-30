@@ -1,5 +1,5 @@
-#ifndef STRING_UTILS_H
-#define STRING_UTILS_H
+#ifndef __UTILS_STRING_UTILS_H
+#define __UTILS_STRING_UTILS_H
 
 #include <stdbool.h>
 

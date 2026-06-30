@@ -2,10 +2,10 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include "./strings/type.h"
-#include "../string_utils.h"
-#include "./arrays.h"
-#include "./core.h"
+#include "strings/type.h"
+#include "strings/utils.h"
+#include "arrays.h"
+#include "core.h"
 
 #define MAX_LINE_LEN 1024
 

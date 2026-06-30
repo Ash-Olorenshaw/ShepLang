@@ -1,7 +1,7 @@
 [
   {
     "arguments": [
-      "/usr/bin/gcc",
+      "/usr/lib64/ccache/gcc",
       "-c",
       "-Wall",
       "-Wextra",
@@ -10,13 +10,13 @@
       "./.temp-run",
       "./build.c"
     ],
-    "directory": "/mnt/D-Files/langs/C/ShepLang",
-    "file": "/mnt/D-Files/langs/C/ShepLang/build.c",
-    "output": "/mnt/D-Files/langs/C/ShepLang/.temp-run"
+    "directory": "/home/ao/Code/C/ShepLang",
+    "file": "/home/ao/Code/C/ShepLang/build.c",
+    "output": "/home/ao/Code/C/ShepLang/.temp-run"
   },
   {
     "arguments": [
-      "/usr/bin/gcc",
+      "/usr/lib64/ccache/gcc",
       "-c",
       "-Wall",
       "-Wextra",
@@ -25,13 +25,13 @@
       "./.temp-run",
       "./build_scripts/utils.c"
     ],
-    "directory": "/mnt/D-Files/langs/C/ShepLang",
-    "file": "/mnt/D-Files/langs/C/ShepLang/build_scripts/utils.c",
-    "output": "/mnt/D-Files/langs/C/ShepLang/.temp-run"
+    "directory": "/home/ao/Code/C/ShepLang",
+    "file": "/home/ao/Code/C/ShepLang/build_scripts/utils.c",
+    "output": "/home/ao/Code/C/ShepLang/.temp-run"
   },
   {
     "arguments": [
-      "/usr/bin/gcc",
+      "/usr/lib64/ccache/gcc",
       "-c",
       "-Wall",
       "-Wextra",
@@ -40,13 +40,43 @@
       "./.temp-run",
       "./build_scripts/args.c"
     ],
-    "directory": "/mnt/D-Files/langs/C/ShepLang",
-    "file": "/mnt/D-Files/langs/C/ShepLang/build_scripts/args.c",
-    "output": "/mnt/D-Files/langs/C/ShepLang/.temp-run"
+    "directory": "/home/ao/Code/C/ShepLang",
+    "file": "/home/ao/Code/C/ShepLang/build_scripts/args.c",
+    "output": "/home/ao/Code/C/ShepLang/.temp-run"
   },
   {
     "arguments": [
-      "/usr/bin/gcc",
+      "/usr/lib64/ccache/gcc",
+      "-c",
+      "-Wall",
+      "-Wextra",
+      "-pedantic",
+      "-o",
+      "./.temp-run",
+      "./utils/core.c"
+    ],
+    "directory": "/home/ao/Code/C/ShepLang",
+    "file": "/home/ao/Code/C/ShepLang/utils/core.c",
+    "output": "/home/ao/Code/C/ShepLang/.temp-run"
+  },
+  {
+    "arguments": [
+      "/usr/lib64/ccache/gcc",
+      "-c",
+      "-Wall",
+      "-Wextra",
+      "-pedantic",
+      "-o",
+      "./.temp-run",
+      "./utils/arrays.c"
+    ],
+    "directory": "/home/ao/Code/C/ShepLang",
+    "file": "/home/ao/Code/C/ShepLang/utils/arrays.c",
+    "output": "/home/ao/Code/C/ShepLang/.temp-run"
+  },
+  {
+    "arguments": [
+      "/usr/lib64/ccache/gcc",
       "-c",
       "-Wall",
       "-Wextra",
@@ -55,23 +85,203 @@
       "./shep",
       "main.c"
     ],
-    "directory": "/mnt/D-Files/langs/C/ShepLang",
-    "file": "/mnt/D-Files/langs/C/ShepLang/main.c",
-    "output": "/mnt/D-Files/langs/C/ShepLang/shep"
+    "directory": "/home/ao/Code/C/ShepLang",
+    "file": "/home/ao/Code/C/ShepLang/main.c",
+    "output": "/home/ao/Code/C/ShepLang/shep"
   },
   {
     "arguments": [
-      "/usr/bin/gcc",
+      "/usr/lib64/ccache/gcc",
       "-c",
       "-Wall",
       "-Wextra",
       "-pedantic",
       "-o",
       "./shep",
-      "string_utils.c"
+      "tokeniser.c"
     ],
-    "directory": "/mnt/D-Files/langs/C/ShepLang",
-    "file": "/mnt/D-Files/langs/C/ShepLang/string_utils.c",
-    "output": "/mnt/D-Files/langs/C/ShepLang/shep"
+    "directory": "/home/ao/Code/C/ShepLang",
+    "file": "/home/ao/Code/C/ShepLang/tokeniser.c",
+    "output": "/home/ao/Code/C/ShepLang/shep"
+  },
+  {
+    "arguments": [
+      "/usr/lib64/ccache/gcc",
+      "-c",
+      "-Wall",
+      "-Wextra",
+      "-pedantic",
+      "-o",
+      "./shep",
+      "parser/parser.c"
+    ],
+    "directory": "/home/ao/Code/C/ShepLang",
+    "file": "/home/ao/Code/C/ShepLang/parser/parser.c",
+    "output": "/home/ao/Code/C/ShepLang/shep"
+  },
+  {
+    "arguments": [
+      "/usr/lib64/ccache/gcc",
+      "-c",
+      "-Wall",
+      "-Wextra",
+      "-pedantic",
+      "-o",
+      "./shep",
+      "parser/vars.c"
+    ],
+    "directory": "/home/ao/Code/C/ShepLang",
+    "file": "/home/ao/Code/C/ShepLang/parser/vars.c",
+    "output": "/home/ao/Code/C/ShepLang/shep"
+  },
+  {
+    "arguments": [
+      "/usr/lib64/ccache/gcc",
+      "-c",
+      "-Wall",
+      "-Wextra",
+      "-pedantic",
+      "-o",
+      "./shep",
+      "utils/core.c"
+    ],
+    "directory": "/home/ao/Code/C/ShepLang",
+    "file": "/home/ao/Code/C/ShepLang/utils/core.c",
+    "output": "/home/ao/Code/C/ShepLang/shep"
+  },
+  {
+    "arguments": [
+      "/usr/lib64/ccache/gcc",
+      "-c",
+      "-Wall",
+      "-Wextra",
+      "-pedantic",
+      "-o",
+      "./shep",
+      "utils/arrays.c"
+    ],
+    "directory": "/home/ao/Code/C/ShepLang",
+    "file": "/home/ao/Code/C/ShepLang/utils/arrays.c",
+    "output": "/home/ao/Code/C/ShepLang/shep"
+  },
+  {
+    "arguments": [
+      "/usr/lib64/ccache/gcc",
+      "-c",
+      "-Wall",
+      "-Wextra",
+      "-pedantic",
+      "-o",
+      "./shep",
+      "utils/file.c"
+    ],
+    "directory": "/home/ao/Code/C/ShepLang",
+    "file": "/home/ao/Code/C/ShepLang/utils/file.c",
+    "output": "/home/ao/Code/C/ShepLang/shep"
+  },
+  {
+    "arguments": [
+      "/usr/lib64/ccache/gcc",
+      "-c",
+      "-Wall",
+      "-Wextra",
+      "-pedantic",
+      "-o",
+      "./shep",
+      "utils/strings/utils.c"
+    ],
+    "directory": "/home/ao/Code/C/ShepLang",
+    "file": "/home/ao/Code/C/ShepLang/utils/strings/utils.c",
+    "output": "/home/ao/Code/C/ShepLang/shep"
+  },
+  {
+    "arguments": [
+      "/usr/lib64/ccache/gcc",
+      "-c",
+      "-Wall",
+      "-Wextra",
+      "-pedantic",
+      "-o",
+      "./shep",
+      "utils/strings/type.c"
+    ],
+    "directory": "/home/ao/Code/C/ShepLang",
+    "file": "/home/ao/Code/C/ShepLang/utils/strings/type.c",
+    "output": "/home/ao/Code/C/ShepLang/shep"
+  },
+  {
+    "arguments": [
+      "/usr/lib64/ccache/gcc",
+      "-c",
+      "-Wall",
+      "-Wextra",
+      "-pedantic",
+      "-o",
+      "./shep",
+      "vars.c"
+    ],
+    "directory": "/home/ao/Code/C/ShepLang",
+    "file": "/home/ao/Code/C/ShepLang/vars.c",
+    "output": "/home/ao/Code/C/ShepLang/shep"
+  },
+  {
+    "arguments": [
+      "/usr/lib64/ccache/gcc",
+      "-c",
+      "-Wall",
+      "-Wextra",
+      "-pedantic",
+      "-o",
+      "./shep",
+      "types.c"
+    ],
+    "directory": "/home/ao/Code/C/ShepLang",
+    "file": "/home/ao/Code/C/ShepLang/types.c",
+    "output": "/home/ao/Code/C/ShepLang/shep"
+  },
+  {
+    "arguments": [
+      "/usr/lib64/ccache/gcc",
+      "-c",
+      "-Wall",
+      "-Wextra",
+      "-pedantic",
+      "-o",
+      "./shep",
+      "./vars/types.c"
+    ],
+    "directory": "/home/ao/Code/C/ShepLang",
+    "file": "/home/ao/Code/C/ShepLang/vars/types.c",
+    "output": "/home/ao/Code/C/ShepLang/shep"
+  },
+  {
+    "arguments": [
+      "/usr/lib64/ccache/gcc",
+      "-c",
+      "-Wall",
+      "-Wextra",
+      "-pedantic",
+      "-o",
+      "./shep",
+      "./vars/compound_types.c"
+    ],
+    "directory": "/home/ao/Code/C/ShepLang",
+    "file": "/home/ao/Code/C/ShepLang/vars/compound_types.c",
+    "output": "/home/ao/Code/C/ShepLang/shep"
+  },
+  {
+    "arguments": [
+      "/usr/lib64/ccache/gcc",
+      "-c",
+      "-Wall",
+      "-Wextra",
+      "-pedantic",
+      "-o",
+      "./shep",
+      "./vars/raw.c"
+    ],
+    "directory": "/home/ao/Code/C/ShepLang",
+    "file": "/home/ao/Code/C/ShepLang/vars/raw.c",
+    "output": "/home/ao/Code/C/ShepLang/shep"
   }
 ]

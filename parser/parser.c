@@ -2,12 +2,12 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "utils/arrays.h"
-#include "utils/core.h"
-#include "utils/strings/type.h"
-#include "tokeniser.h"
-#include "string_utils.h"
-#include "types.h"
+#include "../utils/strings/type.h"
+#include "../utils/strings/utils.h"
+#include "../utils/arrays.h"
+#include "../utils/core.h"
+#include "../tokeniser.h"
+#include "../types.h"
 
 FILE *prototypeFile = NULL;
 FILE *outputFile = NULL;

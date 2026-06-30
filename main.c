@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "./utils/file.h"
 // #include "vars.h"
-#include "parser.h"
+#include "parser/parser.h"
 #include "tokeniser.h"
 
 int main(int argc, char *argv[]) {

@@ -21,7 +21,7 @@
 #include "./utils/arrays.h"
 #include "./utils/core.h"
 
-#define BUILD_FILES "main.c", "parser.c", "tokeniser.c", "string_utils.c", "utils/core.c", "utils/arrays.c", "utils/file.c", "utils/strings/type.c", "vars.c", "types.c", "./vars/types.c", "./vars/compound_types.c", "./vars/raw.c"
+#define BUILD_FILES "main.c", "tokeniser.c", "parser/parser.c", "parser/vars.c", "utils/core.c", "utils/arrays.c", "utils/file.c", "utils/strings/utils.c", "utils/strings/type.c", "vars.c", "types.c", "./vars/types.c", "./vars/compound_types.c", "./vars/raw.c"
 #define OUTPUT_FILE "./shep"
 #define BUILD_ARGS "-lm", "-Wall", "-Wextra", "-pedantic"
 #define DEBUG_ARGS "-g", "-fsanitize=address", "-fno-omit-frame-pointer"

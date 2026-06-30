@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-#include "../string_utils.h"
+#include "../utils/strings/utils.h"
 #include "../utils/arrays.h"
 #include "./raw.h"
 

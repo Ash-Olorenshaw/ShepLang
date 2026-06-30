@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "./string_utils.h"
+#include "./utils/strings/utils.h"
 #include "./utils/arrays.h"
 #include "./utils/strings/type.h"
 #include "./tokeniser.h"

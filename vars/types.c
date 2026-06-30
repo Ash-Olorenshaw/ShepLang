@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "../string_utils.h"
+#include "../utils/strings/utils.h"
 #include "../utils/arrays.h"
 #include "../utils/core.h"
 #include "../types.h"
