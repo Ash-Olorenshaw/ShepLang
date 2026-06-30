@@ -25,5 +25,8 @@ int char_count(const char *str, int start, char c);
 int str_find(const char *str, const char *find);
 bool str_alnum(const char *str);
 bool str_isspace(const char *str);
+char *int_to_str(int target);
+// reverse in place
+void str_rev(char *str);
 
 #endif

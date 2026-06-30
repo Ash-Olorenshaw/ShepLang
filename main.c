@@ -1,11 +1,14 @@
 #include <stdio.h>
-#include "file.h"
-#include "vars.h"
+#include "./utils/file.h"
+// #include "vars.h"
+#include "parser.h"
 #include "tokeniser.h"
 
 int main(int argc, char *argv[]) {
 	rarray *program_lines = get_file_lines(argc < 2 ? "main.c" : argv[1]);
-	tokenise(program_lines);
+	rarray **tkns = tokenise(program_lines);
+	parse(*tkns);
+	rarray_free(*tkns);
 
 
 	// get_var_info("int (*(foo))[123]");

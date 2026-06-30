@@ -1,5 +1,5 @@
-#ifndef FILE_H
-#define FILE_H
+#ifndef __UTILS_FILE_H
+#define __UTILS_FILE_H
 
 #include "arrays.h"
 

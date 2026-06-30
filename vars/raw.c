@@ -4,7 +4,7 @@
 #include <ctype.h>
 
 #include "../string_utils.h"
-#include "../arrays.h"
+#include "../utils/arrays.h"
 #include "./raw.h"
 
 #define NEW_VAR_ELEM(var_elem_elem, var_elem_start) ({ \
@@ -25,9 +25,14 @@ rarray *get_var_elems(const char *line) {
 
 	for (int i = 0; i < line_len; i++) {
 		ch = line[i];
-		if (i < skip_to) continue;
-		else if (i == skip_to && ch == ']')
+
+		if (ch == '=') break;
+		else if (i < skip_to) continue;
+		else if (i == skip_to && ch == ']') {
 			rarray_add(raw_elems, NEW_VAR_ELEM(substr(line, start, i+1), start));
+			start = i + 1;
+		}
+
 		if (ch == '(') {
 			if (start < i)
 				rarray_add(raw_elems, NEW_VAR_ELEM(substr(line, start, i), start));
@@ -65,9 +70,18 @@ rarray *get_var_elems(const char *line) {
 				start = skip_to + 2;
 			}
 		}
-		else if (i == line_len - 1) {
-			char *substring = substr(line, start, i);
-			rarray_add(raw_elems, NEW_VAR_ELEM(substring, start));
+		else if (ch == ',') {
+			if (start < i + 1)
+				rarray_add(raw_elems, NEW_VAR_ELEM(substr(line, start, i + 1), start));
+			start = i + 1;
+		}
+		else if (i == line_len - 1 && ch != ';') {
+			char *substring = substr(line, start, i + 1);
+			printf("LAST ELEM: %s", substring);
+			if (substring != NULL)
+				rarray_add(raw_elems, NEW_VAR_ELEM(substring, start));
+			else
+				free(substring);
 		}
 	}
 

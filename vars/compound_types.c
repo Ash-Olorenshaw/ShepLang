@@ -3,8 +3,8 @@
 #include <stdlib.h>
 
 #include "../string_utils.h"
-#include "../arrays.h"
-#include "../utils.h"
+#include "../utils/arrays.h"
+#include "../utils/core.h"
 #include "../types.h"
 #include "./types.h"
 #include "./raw.h"

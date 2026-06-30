@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 
 char *ltrim(char *str) {
 	while(isspace(*str)) str++;
@@ -115,14 +116,15 @@ enum {
 	else if (isalpha(c))
 		return CHAR_ALPHA;
 	else if (isdigit(c))
-		return CHAR_NUM; //  / % > < = & | ^ ~ ! ? : [ ] ( ) .
+		return CHAR_NUM;
 	else if (c == '+' || c == '-' || c == '*' ||
 			 c == '/' || c == '%' || c == '>' ||
 			 c == '<' || c == '=' || c == '&' ||
 			 c == '|' || c == '^' || c == '~' ||
 			 c == '!' || c == '?' || c == ':' ||
 			 c == '.' || c == '[' || c == ']' ||
-			 c == '(' || c == ')' || c == ',')
+			 c == '(' || c == ')' || c == ',' || 
+			 c == '{' || c == '}')
 		return CHAR_SYMBOL;
 	return CHAR_UNKNOWN;
 }
@@ -162,6 +164,14 @@ int str_find(const char *str, const char *find) {
 	return pos;
 }
 
+char *int_to_str(int target) {
+	int str_len = ((ceil(log10(target))+1)*sizeof(char));
+	char *result = malloc(sizeof(char) * str_len);
+	if (result != NULL)
+		sprintf(result, "%d", target);
+	return result;
+}
+
 bool str_alnum(const char *str) {
 	if (str == NULL)
 		return false;
@@ -180,3 +190,18 @@ bool str_isspace(const char *str) {
 	return true;
 }
 
+// reverse in place
+void str_rev(char *str) {
+    int start = 0, 
+		str_len = strlen(str),
+		end = str_len - 1;
+    char c;
+
+    while (start < end) {
+        c = str[start];
+        str[start] = str[end];
+        str[end] = c;
+        start++;
+        end--;
+    }
+}

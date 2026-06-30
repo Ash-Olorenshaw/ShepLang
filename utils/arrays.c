@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "arrays.h"
-#include "utils.h"
+#include "core.h"
 
 rarray *rarray_create(int size, int item_size) {
 	rarray *new_array = malloc(sizeof(rarray));
@@ -39,6 +39,23 @@ int rarray_resize(rarray *array) {
 	array->items = new_items;
 	array->max_size = array->max_size * 2;
 	return 1;
+}
+
+rarray *rarray_slice(rarray *array, int start, int len) {
+	if (array == NULL || start + len > array->size || start < 0)
+		return NULL;
+	rarray *res = rarray_create(len + start, array->item_size);
+
+	void *elem;
+	int i;
+	RARRAY_FOREACH(elem, array, i) {
+		if (i >= start && i < start + len) {
+			printf("ADDING ITEM %d\n", i);
+			rarray_add(res, elem);
+		}
+	}
+
+	return res;
 }
 
 // positive == success

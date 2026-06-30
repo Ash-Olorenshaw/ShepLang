@@ -3,7 +3,28 @@
 #include <stdbool.h>
 
 #include "types.h"
-#include "utils.h"
+#include "./utils/core.h"
+
+char *c_type_type_names[] = {
+	"C_SIMPLE",
+	"C_PTR",
+	"C_ADR",
+	"C_ARR",
+	"C_ENM",
+	"C_STRT",
+	"C_UNN",
+	"C_FN",
+};
+
+int c_type_simple_names_len = 6;
+char *c_type_simple_names[6] = {
+	"int",
+	"float",
+	"double",
+	"char",
+	"bool",
+	"void",
+};
 
 bool is_type(const char *str) {
 	return
@@ -37,6 +58,7 @@ c_type get_type(const char *str) {
 		result.simple.type = BOOL;
 	}
 	else {
+		fprintf(stderr, "%s : ", str);
 		raise_err("Failed to parse type that does not exist (not 'int', 'float', 'double', 'char' or 'bool')");
 	}
 

@@ -2,7 +2,7 @@
 	printf "BUILDING SCRIPT...\n"
     gcc "$0" \
 		./build_scripts/utils.c ./build_scripts/args.c \
-		./utils.c ./arrays.c \
+		./utils/core.c ./utils/arrays.c \
 		-o ./.temp-run \
 		-Wall -Wextra -pedantic
 	printf "\n"
@@ -18,12 +18,12 @@
 
 #include "build_scripts/utils.h"
 #include "build_scripts/args.h"
-#include "./utils.h"
-#include "./arrays.h"
+#include "./utils/arrays.h"
+#include "./utils/core.h"
 
-#define BUILD_FILES "main.c", "tokeniser.c", "string_utils.c", "utils.c", "arrays.c", "file.c", "vars.c", "types.c", "./vars/types.c", "./vars/compound_types.c", "./vars/raw.c"
+#define BUILD_FILES "main.c", "parser.c", "tokeniser.c", "string_utils.c", "utils/core.c", "utils/arrays.c", "utils/file.c", "utils/strings/type.c", "vars.c", "types.c", "./vars/types.c", "./vars/compound_types.c", "./vars/raw.c"
 #define OUTPUT_FILE "./shep"
-#define BUILD_ARGS "-Wall", "-Wextra", "-pedantic"
+#define BUILD_ARGS "-lm", "-Wall", "-Wextra", "-pedantic"
 #define DEBUG_ARGS "-g", "-fsanitize=address", "-fno-omit-frame-pointer"
 
 
@@ -43,10 +43,10 @@ int main(int argv, const char **argc) {
 	printf("\nFINISHED ARGS\n");
 
 	int time = run_command((char *const *)build_args->items, ".", false);
-	printf("Build finished in %d seconds.", time);
+	printf("Build finished in %d seconds.\n", time);
 
 	if (arg_pos("run", arguments) != -1) {
-		char *run_args[] = { OUTPUT_FILE, NULL };
+		char *run_args[] = { OUTPUT_FILE, "./main.shep", NULL };
 		run_command(run_args, ".", false);
 	}
 }

@@ -3,8 +3,8 @@
 #include <stdlib.h>
 
 #include "../string_utils.h"
-#include "../arrays.h"
-#include "../utils.h"
+#include "../utils/arrays.h"
+#include "../utils/core.h"
 #include "../types.h"
 #include "./compound_types.h"
 #include "./raw.h"
@@ -27,6 +27,7 @@ c_type *get_var_type(rarray *raw_elems, bool is_function, char **name) {
 
 	for (i = 0; i < raw_elems->size; i++) {
 		const char* elem = ((var_elem *)raw_elems->items[i])->elem;
+		printf("RAW ELEM: %s\n", elem);
 		if (strcmp(elem, "*") == 0) {
 			next_item->type = C_PTR;
 			next_item->ptr.to = malloc(sizeof(struct c_type));
@@ -56,7 +57,6 @@ c_type *get_var_type(rarray *raw_elems, bool is_function, char **name) {
 		}
 	}
 
-	printf("GENERATING TYPE: %s\n", ((var_elem *)raw_elems->items[0])->elem);
 	if (is_type(((var_elem *)raw_elems->items[0])->elem))
 		*next_item = get_type(((var_elem *)raw_elems->items[0])->elem);
 
@@ -111,7 +111,6 @@ c_type *get_var_type(rarray *raw_elems, bool is_function, char **name) {
 		result->fn.args = rarray_create(10, sizeof(fn_arg*));
 
 		for (i = start + 1; i < raw_elems->size; i++) {
-
 			if (skip) {
 				skip = false;
 				continue;
@@ -142,11 +141,22 @@ c_type *get_var_type(rarray *raw_elems, bool is_function, char **name) {
 				next_item = next_item->arr.of;
 			}
 			else if (elem[strlen(elem) - 1] == ',' || i == raw_elems->size - 1) {
+				if (strcmp(elem, ",") == 0) {
+					if (i - 2 > 0)
+						elem = ((var_elem *)raw_elems->items[i - 2])->elem;
+					else
+						raise_err("Unable to identify name of var.");
+				}
 				*next_item = get_type(((var_elem *)raw_elems->items[start])->elem);
 				if (i == raw_elems->size - 1)
 					current_arg->name = elem;
 				else {
-					char *new_elem = substr(elem, 0, strlen(elem) - 1);
+					char *new_elem;
+					if (elem[strlen(elem) - 1] == ',')
+						new_elem = substr(elem, 0, strlen(elem) - 1);
+					else
+						new_elem = strdup(elem);
+
 					current_arg->name = new_elem;
 					free(elem);
 				}

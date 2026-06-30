@@ -1,2 +1,5 @@
 .cache/**
 shep
+main.shep
+out.c 
+outPrototypes.h

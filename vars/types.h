@@ -2,7 +2,7 @@
 #define VAR_TYPES_H
 
 #include <stdbool.h>
-#include "../arrays.h"
+#include "../utils/arrays.h"
 #include "../types.h"
 
 // name is an out parameter

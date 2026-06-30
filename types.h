@@ -2,7 +2,7 @@
 #define TYPES_H
 
 #include <stdbool.h>
-#include "arrays.h"
+#include "./utils/arrays.h"
 
 typedef struct {
 	const char *name;
@@ -77,6 +77,10 @@ typedef struct c_type {
 		} fn;
 	};
 } c_type;
+
+extern char *c_type_type_names[];
+extern char *c_type_simple_names[];
+extern int c_type_simple_names_len;
 
 bool is_type(const char *str);
 c_type get_type(const char *str);

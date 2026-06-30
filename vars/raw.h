@@ -1,7 +1,7 @@
 #ifndef VAR_RAW_H
 #define VAR_RAW_H
 
-#include "../arrays.h"
+#include "../utils/arrays.h"
 
 typedef struct {
 	char *elem;

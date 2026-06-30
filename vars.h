@@ -3,6 +3,6 @@
 
 #include "./types.h"
 
-c_type *get_var_info(const char *line);
+c_type *get_var_info(const char *line, char **name);
 
 #endif
