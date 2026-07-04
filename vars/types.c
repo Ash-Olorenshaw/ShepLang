@@ -50,15 +50,29 @@ c_type *get_var_type(rarray *raw_elems, bool is_function, char **name) {
 			next_item->arr.of = malloc(sizeof(struct c_type));
 			next_item = next_item->arr.of;
 		}
-		else if (!is_type(elem) && strcmp(elem, "struct") != 0 && strcmp(elem, "enum") != 0 && strcmp(elem, "union") != 0 && str_alnum(elem) && *name == NULL) {
+		else if (!is_type_mod(elem) && !is_type(elem) && strcmp(elem, "struct") != 0 && strcmp(elem, "enum") != 0 && strcmp(elem, "union") != 0 && str_alnum(elem) && *name == NULL) {
 			*name = strdup(elem);
 			if (is_function)
 				break;
 		}
 	}
 
-	if (is_type(((var_elem *)raw_elems->items[0])->elem))
-		*next_item = get_type(((var_elem *)raw_elems->items[0])->elem);
+	char *elem0 = ((var_elem *)raw_elems->items[0])->elem;
+	if (is_type(elem0) || is_type_mod(elem0)) {
+		int pos = 1;
+		char *nxt_elem = elem0;
+		rarray *mods = rarray_create(5, sizeof(c_type_simple_modifier));
+		while (is_type_mod(nxt_elem)) {
+			printf("Adding mod: %s\n", nxt_elem);
+			c_type_simple_modifier *mod = malloc(sizeof(c_type_simple_modifier));
+			*mod = get_type_mod(nxt_elem);
+			rarray_add(mods, mod);
+			nxt_elem = ((var_elem *)raw_elems->items[pos++])->elem;
+			if (pos == raw_elems->size) raise_err("Incomplete var definition.");
+		}
+		*next_item = get_type(nxt_elem);
+		next_item->simple.modifiers = mods;
+	}
 
 	if (strcmp(((var_elem*)raw_elems->items[0])->elem, "struct") == 0) {
 		next_item->type = C_STRT;

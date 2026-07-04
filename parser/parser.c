@@ -8,6 +8,7 @@
 #include "../utils/core.h"
 #include "../tokeniser.h"
 #include "../types.h"
+#include "./vars.h"
 
 FILE *prototypeFile = NULL;
 FILE *outputFile = NULL;
@@ -100,6 +101,7 @@ FILE *outputFile = NULL;
 void write_variable(c_type *var_type, char *name, bool proto) {
 	string_builder *closing_section = string_builder_create(10);
 	string_builder *start_section = string_builder_create(10);
+	string_builder *mod_section = string_builder_create(10);
 
 	while(var_type != NULL) {
 		switch (var_type->type) {
@@ -112,10 +114,75 @@ void write_variable(c_type *var_type, char *name, bool proto) {
 					fprintf(stderr, "UNKNOWN var type: %d\n", var_type->simple.type);
 					exit(1);
 				}
-				result_write("%s %s%s%s", type_name, start_section->string, name, closing_section->string);
+
+				identifier *new_identifier = malloc(sizeof(identifier));
+				new_identifier->mutable = IDENTIFIER_UNKNOWN_MUTABILITY;
+				new_identifier->location = IDENTIFIER_UNKNOWN;
+
+				bool signed_set = false;
+				bool length_set = false;
+				int i;
+				c_type_simple_modifier *mod;
+				RARRAY_FOREACH(mod, var_type->simple.modifiers, i) {
+					switch (*mod) {
+						case NONE:
+							// UNREACHABLE
+							break;
+						case SIGNED:
+							if (signed_set)
+								raise_err("Var definition cannot specify multiple signed states, pick one: (unsigned, signed)");
+							signed_set = true;
+							string_builder_add_s(mod_section, "signed ");
+							break;
+						case UNSIGNED:
+							if (signed_set)
+								raise_err("Var definition cannot specify multiple signed states, pick one: (unsigned, signed)");
+							signed_set = true;
+							string_builder_add_s(mod_section, "unsigned ");
+							break;
+						case STACK:
+							if (new_identifier->mutable == IDENTIFIER_UNKNOWN)
+								new_identifier->mutable = IDENTIFIER_STACK_ALLOCATED;
+							else
+								raise_err("Var definition cannot repeat allocation specifiers, pick one: (heap, stack)");
+							break;
+						case HEAP:
+							if (new_identifier->mutable == IDENTIFIER_UNKNOWN)
+								new_identifier->mutable = IDENTIFIER_HEAP_ALLOCATED;
+							else
+								raise_err("Var definition cannot repeat allocation specifiers, pick one: (heap, stack)");
+							break;
+						case SHORT:
+							if (length_set)
+								raise_err("Var definition cannot specify multiple lengths, pick one: (long, short)");
+							length_set = true;
+							string_builder_add_s(mod_section, "short ");
+							break;
+						case LONG:
+							if (length_set)
+								raise_err("Var definition cannot specify multiple lengths, pick one: (long, short)");
+							length_set = true;
+							string_builder_add_s(mod_section, "long ");
+							break;
+						case MUTABLE:
+							if (new_identifier->mutable == IDENTIFIER_UNKNOWN_MUTABILITY)
+								new_identifier->mutable = IDENTIFIER_MUTABLE;
+							else
+								raise_err("Var definition cannot repeat mutability specifiers");
+
+					}
+				}
+				if (new_identifier->mutable == IDENTIFIER_UNKNOWN_MUTABILITY)
+					new_identifier->mutable = IDENTIFIER_IMMUTABLE;
+
+				result_write("%s %s %s%s%s", mod_section->string, type_name, start_section->string, name, closing_section->string);
 				if (proto)
-					prototype_write("%s %s%s%s", type_name, start_section->string, name, closing_section->string);
+					prototype_write("%s %s %s%s%s", mod_section->string, type_name, start_section->string, name, closing_section->string);
 				var_type = NULL;
+
+				new_identifier->name = strdup(name);
+				new_identifier->type = IDENTIFIER_VAR;
+				// new_identifier->location = 
 				break;
 			case C_PTR:
 				string_builder_add_c(start_section, '*');
@@ -261,6 +328,7 @@ void write_block(tkn_line *target) {
 }
 
 void write_function(tkn_line *target) {
+	string_builder *mod_section = string_builder_create(10);
 	string_builder *start_section = string_builder_create(10);
 	char *type_name;
 	c_type *func_type = target->func_definition.type;
@@ -278,8 +346,71 @@ void write_function(tkn_line *target) {
 					fprintf(stderr, "UNKNOWN function type: %d\n", func_type->simple.type);
 					exit(1);
 				}
-				result_write("%s %s%s", type_name, start_section->string, target->func_definition.name);
-				prototype_write("%s %s%s", type_name, start_section->string, target->func_definition.name);
+				identifier *new_identifier = malloc(sizeof(identifier));
+				new_identifier->mutable = IDENTIFIER_UNKNOWN_MUTABILITY;
+				new_identifier->location = IDENTIFIER_UNKNOWN;
+
+				bool signed_set = false;
+				bool length_set = false;
+				int i;
+				c_type_simple_modifier *mod;
+				RARRAY_FOREACH(mod, func_type->simple.modifiers, i) {
+					switch (*mod) {
+						case NONE:
+							// UNREACHABLE
+							break;
+						case SIGNED:
+							if (signed_set)
+								raise_err("Func definition cannot specify multiple signed states, pick one: (unsigned, signed)");
+							signed_set = true;
+							string_builder_add_s(mod_section, "signed ");
+							break;
+						case UNSIGNED:
+							if (signed_set)
+								raise_err("Func definition cannot specify multiple signed states, pick one: (unsigned, signed)");
+							signed_set = true;
+							string_builder_add_s(mod_section, "unsigned ");
+							break;
+						case STACK:
+							if (new_identifier->mutable == IDENTIFIER_UNKNOWN)
+								new_identifier->mutable = IDENTIFIER_STACK_ALLOCATED;
+							else
+								raise_err("Func definition cannot repeat allocation specifiers, pick one: (heap, stack)");
+							break;
+						case HEAP:
+							if (new_identifier->mutable == IDENTIFIER_UNKNOWN)
+								new_identifier->mutable = IDENTIFIER_HEAP_ALLOCATED;
+							else
+								raise_err("Func definition cannot repeat allocation specifiers, pick one: (heap, stack)");
+							break;
+						case SHORT:
+							if (length_set)
+								raise_err("Func definition cannot specify multiple lengths, pick one: (long, short)");
+							length_set = true;
+							string_builder_add_s(mod_section, "short ");
+							break;
+						case LONG:
+							if (length_set)
+								raise_err("Func definition cannot specify multiple lengths, pick one: (long, short)");
+							length_set = true;
+							string_builder_add_s(mod_section, "long ");
+							break;
+						case MUTABLE:
+							if (new_identifier->mutable == IDENTIFIER_UNKNOWN_MUTABILITY)
+								new_identifier->mutable = IDENTIFIER_MUTABLE;
+							else
+								raise_err("Func definition cannot repeat mutability specifiers");
+
+					}
+				}
+				if (new_identifier->mutable == IDENTIFIER_UNKNOWN_MUTABILITY)
+					new_identifier->mutable = IDENTIFIER_IMMUTABLE;
+
+				new_identifier->name = strdup(target->func_definition.name);
+				new_identifier->type = IDENTIFIER_FUNC;
+
+				result_write("%s %s %s%s", mod_section->string, type_name, start_section->string, target->func_definition.name);
+				prototype_write("%s %s %s%s", mod_section->string, type_name, start_section->string, target->func_definition.name);
 				func_type = NULL;
 				break;
 			case C_PTR:
@@ -325,6 +456,7 @@ int write_tkn_line(tkn_line *line, char *name, bool write_newline) {
 			// write_type(*line->var_definition.type, false);
 			// result_write("VAR: %s", line->var_definition.name);
 			write_variable(line->var_definition.type, line->var_definition.name, false);
+
 			tkn *var_tkn;
 			tkn_line *var_tkns;
 			if (line->var_definition.simple) {

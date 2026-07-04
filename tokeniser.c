@@ -274,8 +274,11 @@ rarray **tokenise_lines(rarray *lines) {
 			tkn *tkn_last = tkns->items[tkns->size - 1];
 
 			if (tkn_1->type == IDENTIFIER && (
-					strcmp(tkn_1->content, "const") == 0 ||
+					strcmp(tkn_1->content, "stack") == 0 ||
+					strcmp(tkn_1->content, "heap") == 0 ||
+					strcmp(tkn_1->content, "mutable") == 0 ||
 					strcmp(tkn_1->content, "struct") == 0 ||
+					strcmp(tkn_1->content, "const") == 0 ||
 					strcmp(tkn_1->content, "union") == 0 ||
 					strcmp(tkn_1->content, "enum") == 0 ||
 					strcmp(tkn_1->content, "signed") == 0 ||

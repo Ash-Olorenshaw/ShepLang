@@ -23,5 +23,6 @@ int rarray_free(rarray *array);
 int rarray_resize(rarray *array);
 int rarray_add(rarray *array, void *item);
 rarray *rarray_slice(rarray *array, int start, int len);
+void *rarray_pop(rarray *array);
 
 #endif

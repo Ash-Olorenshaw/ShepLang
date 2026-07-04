@@ -25,6 +25,9 @@ typedef enum { // TODO - not implemented (+ we need to do const as well)
 	UNSIGNED,
 	SHORT,
 	LONG,
+	STACK,
+	HEAP,
+	MUTABLE
 } c_type_simple_modifier;
 
 typedef struct c_type {
@@ -82,7 +85,9 @@ extern char *c_type_type_names[];
 extern char *c_type_simple_names[];
 extern int c_type_simple_names_len;
 
+bool is_type_mod(const char *str);
 bool is_type(const char *str);
+c_type_simple_modifier get_type_mod(char *target);
 c_type get_type(const char *str);
 void print_type(c_type target, bool newline);
 

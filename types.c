@@ -26,6 +26,18 @@ char *c_type_simple_names[6] = {
 	"void",
 };
 
+bool is_type_mod(const char *str) {
+	return 
+		strcmp(str, "stack") == 0 ||
+		strcmp(str, "heap") == 0 ||
+		strcmp(str, "mutable") == 0 ||
+		strcmp(str, "const") == 0 ||
+		strcmp(str, "signed") == 0 ||
+		strcmp(str, "unsigned") == 0 ||
+		strcmp(str, "short") == 0 ||
+		strcmp(str, "long") == 0;
+}
+
 bool is_type(const char *str) {
 	return
 		strcmp(str, "int") == 0 ||
@@ -63,6 +75,28 @@ c_type get_type(const char *str) {
 	}
 
 	return result;
+}
+
+c_type_simple_modifier get_type_mod(char *target) {
+	if (strcmp(target, "stack") == 0)
+		return STACK;
+	else if (strcmp(target, "heap") == 0)
+		return HEAP;
+	else if (strcmp(target, "mutable") == 0)
+		return MUTABLE;
+	else if (strcmp(target, "signed") == 0)
+		return SIGNED;
+	else if (strcmp(target, "unsigned") == 0)
+		return UNSIGNED;
+	else if (strcmp(target, "short") == 0)
+		return SHORT;
+	else if (strcmp(target, "long") == 0)
+		return LONG;
+	else {
+		fprintf(stderr, "%s : ", target);
+		raise_err("Failed to parse type modifier that does not exist (not 'stack', 'heap', 'mutable', 'signed', 'unsigned', 'short' or 'long')");
+	}
+	return NONE;
 }
 
 void free_type(c_type *target) {
@@ -103,15 +137,39 @@ void print_type(c_type target, bool newline) {
 		else if (target.simple.type == VOID)
 			printf("VOID ");
 
-		// TODO: this should append/create an array
-		// if (target.simple.type == SIGNED)
-		// 	printf("SIGNED ");
-		// else if (target.simple.type == UNSIGNED)
-		// 	printf("UNSIGNED ");
-		// else if (target.simple.type == SHORT)
-		// 	printf("SHORT ");
-		// else if (target.simple.type == LONG)
-		// 	printf("LONG ");
+		if (target.simple.modifiers && target.simple.modifiers->size > 0) {
+			printf("( ");
+			int i;
+			c_type_simple_modifier *mod;
+			RARRAY_FOREACH(mod, target.simple.modifiers, i) {
+				switch (*mod) {
+					case NONE:
+						printf("NONE ");
+						break;
+					case SIGNED:
+						printf("SIGNED ");
+						break;
+					case UNSIGNED:
+						printf("UNSIGNED ");
+						break;
+					case STACK:
+						printf("STACK ");
+						break;
+					case HEAP:
+						printf("HEAP ");
+						break;
+					case SHORT:
+						printf("SHORT ");
+						break;
+					case LONG:
+						printf("LONG ");
+						break;
+					case MUTABLE:
+						printf("MUTABLE ");
+				}
+			}
+			printf(")");
+		}
 	}
 	else if (target.type == C_PTR) {
 		printf("C_PTR: ");

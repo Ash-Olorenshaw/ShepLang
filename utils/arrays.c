@@ -69,3 +69,12 @@ int rarray_add(rarray *array, void *item) {
 	return 1;
 }
 
+// positive == success
+void *rarray_pop(rarray *array) {
+	if (array->size <= 0)
+		return NULL;
+	void *final = array->items[array->size];
+	array->items[array->size--] = NULL;
+	return final;
+}
+

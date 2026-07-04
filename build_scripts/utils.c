@@ -75,6 +75,6 @@ double run_command(char *const args[], const char *dir, bool no_stdout) {
 			exit(1);
 		}
 	}
-	return 0;
+	return -1;
 }
 
