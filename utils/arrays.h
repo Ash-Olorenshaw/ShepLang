@@ -18,6 +18,18 @@ typedef struct {
 #define RARRAY_FOREACH(elem, target, i) \
     for (i = 0; (target) != NULL && i < (target)->size && ((elem) = (target)->items[i]) != NULL; i++)
 
+#define RARRAY_CONTAINS(array, target, target_type, contains) { \
+	int i = 0; \
+	target_type *item; \
+	contains = false; \
+	RARRAY_FOREACH(item, array, i) { \
+		if (target == *item) { \
+			contains = true; \
+			break; \
+		} \
+	} \
+}
+
 rarray *rarray_create(int size, int item_size);
 int rarray_free(rarray *array);
 int rarray_resize(rarray *array);

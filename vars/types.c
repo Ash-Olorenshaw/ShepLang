@@ -73,6 +73,7 @@ c_type *get_var_type(rarray *raw_elems, bool is_function, char **name) {
 		*next_item = get_type(nxt_elem);
 		next_item->simple.modifiers = mods;
 	}
+	else next_item->simple.modifiers = NULL;
 
 	if (strcmp(((var_elem*)raw_elems->items[0])->elem, "struct") == 0) {
 		next_item->type = C_STRT;

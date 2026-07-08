@@ -10,6 +10,7 @@ rarray *current_scope;
 
 void init_identifier_scopes(void) {
 	identifier_scopes = rarray_create(10, sizeof(rarray*));
+	create_new_scope();
 }
 
 rarray *create_new_scope(void) {
@@ -40,7 +41,9 @@ void add_to_scope(identifier *item) {
 
 void exit_scope(void) {
 	rarray *popped = rarray_pop(identifier_scopes);
-	if (popped != NULL)
-		rarray_free(popped);
+	current_scope = identifier_scopes->items[identifier_scopes->size - 1];
+	// TODO - fix cleanup
+	// if (popped != NULL)
+	// 	rarray_free(popped);
 }
 

@@ -52,6 +52,7 @@ typedef struct c_type {
 				VOID,
 			} type;
 			rarray *modifiers; // c_type_simple_modifier
+			rarray *size; // tkn
 		} simple;
 		struct {
 			struct c_type *to;
@@ -89,6 +90,7 @@ bool is_type_mod(const char *str);
 bool is_type(const char *str);
 c_type_simple_modifier get_type_mod(char *target);
 c_type get_type(const char *str);
+void test_mods(c_type target);
 void print_type(c_type target, bool newline);
 
 #endif

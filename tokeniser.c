@@ -488,8 +488,7 @@ void print_tokenised_line(tkn_line *line, int depth) {
 rarray **tokenise(rarray *file_lines) {
 	rarray **new_tkn_lines = tokenise_lines(file_lines);
 
-	printf("GOT ARRAY: %d\n", (*new_tkn_lines)->size);
-	printf("MAX: %d\n", (*new_tkn_lines)->max_size);
+	printf("TOKENS (%d):\n", (*new_tkn_lines)->size);
 	printf("======================================== \n\n");
 	int i;
 	tkn_line *line;
@@ -502,8 +501,6 @@ rarray **tokenise(rarray *file_lines) {
 			printf("\nEMPTY LINE\n");
 	}
 	printf("======================================== \n\n");
-	printf("GOT ARRAY: %d\n", (*new_tkn_lines)->size);
-	printf("MAX: %d\n", (*new_tkn_lines)->max_size);
 
 	return new_tkn_lines;
 }

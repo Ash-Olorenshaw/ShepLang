@@ -38,7 +38,7 @@ c_type *get_var_info(const char *line, char **name) {
 	c_type *result = get_var_type(raw_elems, is_function, name);
 	print_type(*result, true);
 
-	rarray_free(raw_elems); // TODO - this isn't a proper free since each thing is now a struct...
+	// rarray_free(raw_elems); // TODO - this isn't a proper free since each thing is now a struct...
 	free(line_copy);
 
 	printf("\n");

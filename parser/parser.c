@@ -98,7 +98,7 @@ FILE *outputFile = NULL;
 // }
 
 
-void write_variable(c_type *var_type, char *name, bool proto) {
+void write_variable(c_type *var_type, char *name, bool proto, bool type_only) {
 	string_builder *closing_section = string_builder_create(10);
 	string_builder *start_section = string_builder_create(10);
 	string_builder *mod_section = string_builder_create(10);
@@ -182,7 +182,7 @@ void write_variable(c_type *var_type, char *name, bool proto) {
 
 				new_identifier->name = strdup(name);
 				new_identifier->type = IDENTIFIER_VAR;
-				// new_identifier->location = 
+				add_to_scope(new_identifier);
 				break;
 			case C_PTR:
 				string_builder_add_c(start_section, '*');
@@ -194,14 +194,20 @@ void write_variable(c_type *var_type, char *name, bool proto) {
 				raise_err("Cannot have the address operator '&' in a variable defintion");
 			case C_ARR:
 				string_builder_add_c(start_section, '(');
-				string_builder_add_c(closing_section, ']');
-				string_builder_add_c(closing_section, '[');
-				string_builder_add_c(closing_section, ')');
+				if (!type_only)
+					string_builder_add_c(closing_section, ']');
+
 				if (var_type->arr.size > 0) {
 					char *intstr = int_to_str(var_type->arr.size);
 					string_builder_add_s(closing_section, intstr);
 					free(intstr);
 				}
+				else if (type_only) raise_err("Cannot infer array size for heap-allocated array\n");
+				if (type_only)
+					string_builder_add_c(closing_section, '*');
+				else
+					string_builder_add_c(closing_section, '[');
+				string_builder_add_c(closing_section, ')');
 				var_type = var_type->arr.of;
 				break;
 			default:
@@ -253,13 +259,6 @@ void write_variable(c_type *var_type, char *name, bool proto) {
 	// }
 }
 
-/*
-int binarySearch(int array[], int number, int start, int end) {
-FUNC DEFINITION: { (binarySearch) : C_FN: C_SIMPLE: INT  { array: (C_ARR (-1): C_SIMPLE: INT ) } { number: (C_SIMPLE: INT ) } { start: (C_SIMPLE: INT ) } { end: (C_
-SIMPLE: INT ) } }
-PROTOTYPE:  { (in) : C_PTR: C_PTR: C_ARR (-1): C_SIMPLE: INT  };
-*/
-
 void write_tkn(tkn *target);
 void write_tkn(tkn *target) {
 	if (target->type == CONTAINER || target->type == OPERATOR_SLICE) {
@@ -286,6 +285,26 @@ void write_statement(tkn_line *target) {
 		tkn *elem;
 		int i;
 		RARRAY_FOREACH(elem, target->statement.tkns, i) {
+			if (elem->type == OPERATOR_ASSIGN) {
+				if (i > 0) {
+					tkn *last_tkn = target->statement.tkns->items[i-1];
+					if (last_tkn->type != IDENTIFIER)
+						raise_err("Assignment operators require an identifier on the left side of the operator.");
+					else {
+						identifier *found = scope_find(last_tkn->content, IDENTIFIER_VAR);
+						if (found == NULL) {
+							fprintf(stderr, "%s : ", last_tkn->content);
+							raise_err("Failed to find variable identifier");
+						}
+						else {
+							if (found->mutable != IDENTIFIER_MUTABLE) {
+								fprintf(stderr, "%s : ", found->name);
+								raise_err("Reassigning immutable variable. Mark variable with 'mutable' to be able to change it.");
+							}
+						}
+					}
+				}
+			}
 			write_tkn(elem);
 			result_write(" ");
 		}
@@ -408,6 +427,7 @@ void write_function(tkn_line *target) {
 
 				new_identifier->name = strdup(target->func_definition.name);
 				new_identifier->type = IDENTIFIER_FUNC;
+				add_to_scope(new_identifier);
 
 				result_write("%s %s %s%s", mod_section->string, type_name, start_section->string, target->func_definition.name);
 				prototype_write("%s %s %s%s", mod_section->string, type_name, start_section->string, target->func_definition.name);
@@ -433,7 +453,7 @@ void write_function(tkn_line *target) {
 	int i;
 	fn_arg *arg;
 	RARRAY_FOREACH(arg, target->func_definition.type->fn.args, i) {
-		write_variable(arg->type, arg->name, true);
+		write_variable(arg->type, arg->name, true, false);
 		if (i < target->func_definition.type->fn.arg_count - 1) {
 			result_write(",");
 			prototype_write(",");
@@ -447,22 +467,64 @@ int write_tkn_line(tkn_line *line, char *name, bool write_newline);
 int write_tkn_line(tkn_line *line, char *name, bool write_newline) {
 	int i;
 	tkn_line *writing_line;
-	printf("WRITING (%s) \n", line_names[line->type]);
+	// printf("WRITING (%s) \n", line_names[line->type]);
 	switch (line->type) {
 		case MACRO:
 			result_write("%s\n", line->macro.content);
 			break;
 		case VAR_DEFINITION:
-			// write_type(*line->var_definition.type, false);
-			// result_write("VAR: %s", line->var_definition.name);
-			write_variable(line->var_definition.type, line->var_definition.name, false);
+			write_variable(line->var_definition.type, line->var_definition.name, false, false);
+			bool var_is_stack = false;
+			bool var_is_heap = false;
+			c_type *simple_var = (line->var_definition.type);
+			print_type(*simple_var, false);
+			if (simple_var->type == C_SIMPLE && simple_var->simple.modifiers && simple_var->simple.modifiers->size > 0) {
+				RARRAY_CONTAINS(
+					line->var_definition.type->simple.modifiers, 
+					STACK, 
+					c_type_simple_modifier, 
+					var_is_stack
+				);
+				RARRAY_CONTAINS(
+					line->var_definition.type->simple.modifiers, 
+					HEAP, 
+					c_type_simple_modifier, 
+					var_is_heap
+				);
+				if (var_is_stack && var_is_heap) 
+					raise_err("Vars cannot be defined as both heap and stack.");
+			}
 
 			tkn *var_tkn;
 			tkn_line *var_tkns;
 			if (line->var_definition.simple) {
 				result_write(" = \n");
-				RARRAY_FOREACH(var_tkn, line->var_definition.val, i)
-					write_tkn(var_tkn);
+				if (var_is_heap) {
+					result_write(" = \n");
+					c_type *var_type = line->var_definition.type;
+					while(var_type != NULL) {
+						switch (var_type->type) {
+							case C_SIMPLE:
+								break;
+							case C_PTR:
+								break;
+							case C_ARR:
+								break;
+							case C_ADR:
+								break;
+							case C_ENM:
+							case C_STRT:
+							case C_UNN:
+							case C_FN:
+								printf(">>>>>> TODO\n\n\n");
+								break;
+						}
+					}
+				}
+				else {
+					RARRAY_FOREACH(var_tkn, line->var_definition.val, i)
+						write_tkn(var_tkn);
+				}
 			}
 			else {
 				bool array_like = true;
@@ -493,16 +555,20 @@ int write_tkn_line(tkn_line *line, char *name, bool write_newline) {
 			// result_write("FUNC: %s", line->func_definition.name);
 			write_function(line);
 			result_write("{\n");
+			create_new_scope();
 			RARRAY_FOREACH(writing_line, line->func_definition.tkn_lines, i)
 				write_tkn_line(writing_line, name, true);
 			result_write("}\n");
+			exit_scope();
 			break;
 		case BLOCK:
 			write_block(line);
 			result_write("{\n");
+			create_new_scope();
 			RARRAY_FOREACH(writing_line, line->block.tkn_lines, i)
 				write_tkn_line(writing_line, name, true);
 			result_write("}\n");
+			exit_scope();
 			break;
 		case STATEMENT:
 			if (name == NULL) {
@@ -543,7 +609,7 @@ int parse(rarray *tkn_lines) {
 	outputFile = freopen("./out.c", "a", outputFile);
 	prototypeFile = freopen("./outPrototypes.h", "a", prototypeFile);
 	result_write("#include \"outPrototypes.h\"\n");
-	rarray *symbols[100]; // should contain functions, vars, including if it's mutable and stack/heap
+	init_identifier_scopes();
 
 	int i;
 	tkn_line *line;
