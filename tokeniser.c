@@ -157,10 +157,10 @@ parse:
 				tkn *new_tkn = malloc(sizeof(tkn));
 				new_tkn->content = strdup(selection->string);
 				if (
-						strchr(selection->string, '=') != NULL && 
-						strcmp(selection->string, "==") != 0 && 
-						strcmp(selection->string, "!=") != 0 && 
-						strcmp(selection->string, ">=") != 0 && 
+						strchr(selection->string, '=') != NULL &&
+						strcmp(selection->string, "==") != 0 &&
+						strcmp(selection->string, "!=") != 0 &&
+						strcmp(selection->string, ">=") != 0 &&
 						strcmp(selection->string, "<=") != 0
 					)
 					new_tkn->type = OPERATOR_ASSIGN;
@@ -252,8 +252,9 @@ rarray **tokenise_lines(rarray *lines) {
 	bool new_tkn_created = false;
 	parent_tkns[0] = rarray_create(100, sizeof(tkn_line));
 	int parent_tkns_pos = 0;
-	
+
 	RARRAY_FOREACH(line, lines, i) {
+		printf("LINE : %s (depth: %d)\n", line, parent_tkns_pos);
 		if (is_c_macro(line)) {
 			new_tkn->type = MACRO;
 			new_tkn->macro.content = line;
@@ -268,7 +269,7 @@ rarray **tokenise_lines(rarray *lines) {
 			remove_unnecessary_whitespace(line);
 			rarray *tkns = raw_tokenise_line(line, true);
 
-			if (tkns->size < 1) 
+			if (tkns->size < 1)
 				continue;
 			tkn *tkn_1 = tkns->items[0];
 			tkn *tkn_last = tkns->items[tkns->size - 1];
@@ -285,6 +286,7 @@ rarray **tokenise_lines(rarray *lines) {
 					strcmp(tkn_1->content, "unsigned") == 0 ||
 					strcmp(tkn_1->content, "short") == 0 ||
 					strcmp(tkn_1->content, "long") == 0 ||
+					strcmp(tkn_1->content, "void") == 0 ||
 					strcmp(tkn_1->content, "int") == 0 ||
 					strcmp(tkn_1->content, "float") == 0 ||
 					strcmp(tkn_1->content, "double") == 0 ||
@@ -302,15 +304,16 @@ rarray **tokenise_lines(rarray *lines) {
 					}
 				}
 
-				if (assignments > 1)
+				if (assignments > 1) {
 					raise_err("Cannot have multiple top-level variable assignments");
+				}
 				else if (assignments == 1) {
 					new_tkn->type = VAR_DEFINITION;
 					new_tkn->var_definition.type = get_var_info(substr(line, 0, strchr(line, '=') - line), &(new_tkn->var_definition.name));
 					if (tkn_last->type == BLOCK_START) {
 						new_tkn->var_definition.simple = false;
 						new_tkn->var_definition.val_lines = rarray_create(50, sizeof(tkn_line));
-						
+
 						// NOTE: manually add new tkn instead of using 'new_tkn_created' since using it will create a circular ref.
 						rarray_add(parent_tkns[parent_tkns_pos], new_tkn);
 						if (parent_tkns_pos < MAX_BLOCK_DEPTH - 1)
@@ -330,7 +333,7 @@ rarray **tokenise_lines(rarray *lines) {
 						new_tkn->type = FUNC_DEFINITION;
 						new_tkn->func_definition.tkn_lines = rarray_create(50, sizeof(tkn_line));
 						new_tkn->func_definition.type = get_var_info(line, &(new_tkn->func_definition.name));
-						
+
 						// NOTE: manually add new tkn instead of using 'new_tkn_created' since using it will create a circular ref.
 						rarray_add(parent_tkns[parent_tkns_pos], new_tkn);
 						if (parent_tkns_pos < MAX_BLOCK_DEPTH - 1)
@@ -352,7 +355,6 @@ rarray **tokenise_lines(rarray *lines) {
 				tkn_1->type == IDENTIFIER_FOR ||
 				tkn_1->type == IDENTIFIER_SWITCH
 			) {
-				// TODO - else if 
 				new_tkn->type = BLOCK;
 				new_tkn->block.type = tkn_1;
 
@@ -360,7 +362,8 @@ rarray **tokenise_lines(rarray *lines) {
 
 				if (tkn_1->type != IDENTIFIER_ELSE) {
 					content_start = 3;
-					if (tkns->size > 2)
+					printf("TKNS: %d, %s\n", tkns->size, ((tkn *)tkns->items[1])->content);
+					if (tkns->size >= 2)
 						new_tkn->block.content = tkns->items[1];
 					else
 						raise_err("Incomplete block statement (if/while/case)");
@@ -396,6 +399,7 @@ rarray **tokenise_lines(rarray *lines) {
 				}
 			}
 			else if (tkn_1->type == BLOCK_END) {
+				printf("LEAVING BLOCK (%d)\n", parent_tkns_pos - 1);
 				if (parent_tkns_pos > 0)
 					parent_tkns_pos--;
 				else
@@ -497,7 +501,7 @@ rarray **tokenise(rarray *file_lines) {
 		if (line != NULL) {
 			print_tokenised_line(line, 0); // token_lines->items[i]
 		}
-		else 
+		else
 			printf("\nEMPTY LINE\n");
 	}
 	printf("======================================== \n\n");

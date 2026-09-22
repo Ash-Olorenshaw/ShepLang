@@ -1,5 +1,4 @@
 #include <string.h>
-#include <stdio.h>
 #include <stdbool.h>
 #include "./args.h"
 
@@ -10,4 +9,3 @@ int arg_pos(const char *arg, args arguments) {
 	}
 	return -1;
 }
-

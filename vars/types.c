@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #include "../utils/strings/utils.h"
 #include "../utils/arrays.h"
@@ -8,6 +9,28 @@
 #include "../types.h"
 #include "./compound_types.h"
 #include "./raw.h"
+
+
+void assign_var_type_and_mod(rarray *elems, int elems_start, c_type **next_item) {
+	// helper func that basically consumes all "mods" for a var type and then consumes the type
+	char *elem0 = ((var_elem *)elems->items[elems_start])->elem;
+	if (is_type(elem0) || is_type_mod(elem0)) {
+		int pos = elems_start + 1;
+		char *nxt_elem = elem0;
+		rarray *mods = rarray_create(5, sizeof(c_type_simple_modifier));
+		while (is_type_mod(nxt_elem)) {
+			printf("Adding mod: %s\n", nxt_elem);
+			c_type_simple_modifier *mod = malloc(sizeof(c_type_simple_modifier));
+			*mod = get_type_mod(nxt_elem);
+			rarray_add(mods, mod);
+			nxt_elem = ((var_elem *)elems->items[pos++])->elem;
+			if (pos == elems->size) raise_err("Incomplete var definition.");
+		}
+		*next_item = get_type(nxt_elem);
+		(*next_item)->simple.modifiers = mods;
+	}
+	else (*next_item)->simple.modifiers = NULL;
+}
 
 // name must be an unitialised string
 c_type *get_var_type(rarray *raw_elems, bool is_function, char **name) {
@@ -40,12 +63,22 @@ c_type *get_var_type(rarray *raw_elems, bool is_function, char **name) {
 		}
 		else if (elem[0] == '[' && elem[strlen(elem) - 1] == ']') {
 			next_item->type = C_ARR;
+			next_item->arr.size_identifier = NULL;
 			if (strlen(elem) > 2) {
 				char *num_str = substr(elem, 1, strlen(elem) - 1);
-				next_item->arr.size = atoi(num_str);
+				bool is_digit = true;
+				for (int i = 0; i < (int) strlen(num_str); i++)
+					if (!isdigit(num_str[i])) {
+						is_digit = false;
+						break;
+					}
+				if (is_digit)
+					next_item->arr.size_int = atoi(num_str);
+				else
+					next_item->arr.size_identifier = strdup(num_str);
 				free(num_str);
 			}
-			else next_item->arr.size = -1;
+			else next_item->arr.size_int = -1;
 
 			next_item->arr.of = malloc(sizeof(struct c_type));
 			next_item = next_item->arr.of;
@@ -57,23 +90,7 @@ c_type *get_var_type(rarray *raw_elems, bool is_function, char **name) {
 		}
 	}
 
-	char *elem0 = ((var_elem *)raw_elems->items[0])->elem;
-	if (is_type(elem0) || is_type_mod(elem0)) {
-		int pos = 1;
-		char *nxt_elem = elem0;
-		rarray *mods = rarray_create(5, sizeof(c_type_simple_modifier));
-		while (is_type_mod(nxt_elem)) {
-			printf("Adding mod: %s\n", nxt_elem);
-			c_type_simple_modifier *mod = malloc(sizeof(c_type_simple_modifier));
-			*mod = get_type_mod(nxt_elem);
-			rarray_add(mods, mod);
-			nxt_elem = ((var_elem *)raw_elems->items[pos++])->elem;
-			if (pos == raw_elems->size) raise_err("Incomplete var definition.");
-		}
-		*next_item = get_type(nxt_elem);
-		next_item->simple.modifiers = mods;
-	}
-	else next_item->simple.modifiers = NULL;
+	assign_var_type_and_mod(raw_elems, 0, &next_item);
 
 	if (strcmp(((var_elem*)raw_elems->items[0])->elem, "struct") == 0) {
 		next_item->type = C_STRT;
@@ -145,12 +162,22 @@ c_type *get_var_type(rarray *raw_elems, bool is_function, char **name) {
 			}
 			else if (elem[0] == '[' && elem[strlen(elem) - 1] == ']') {
 				next_item->type = C_ARR;
+				next_item->arr.size_identifier = NULL;
 				if (strlen(elem) > 2) {
 					char *num_str = substr(elem, 1, strlen(elem) - 1);
-					next_item->arr.size = atoi(num_str);
+					bool is_digit = true;
+					for (int i = 0; i < (int) strlen(num_str); i++)
+						if (!isdigit(num_str[i])) {
+							is_digit = false;
+							break;
+						}
+					if (is_digit)
+						next_item->arr.size_int = atoi(num_str);
+					else
+						raise_err("You cannot use identifiers to describe array length in function prototypes: '%s'", elem);
 					free(num_str);
 				}
-				else next_item->arr.size = -1;
+				else next_item->arr.size_int = -1;
 
 				next_item->arr.of = malloc(sizeof(struct c_type));
 				next_item = next_item->arr.of;
@@ -160,9 +187,9 @@ c_type *get_var_type(rarray *raw_elems, bool is_function, char **name) {
 					if (i - 2 > 0)
 						elem = ((var_elem *)raw_elems->items[i - 2])->elem;
 					else
-						raise_err("Unable to identify name of var.");
+						raise_err("Unable to identify name of var '%s'.", elem);
 				}
-				*next_item = get_type(((var_elem *)raw_elems->items[start])->elem);
+				assign_var_type_and_mod(raw_elems, start, &next_item);
 				if (i == raw_elems->size - 1)
 					current_arg->name = elem;
 				else {

@@ -65,5 +65,9 @@ int main(int argc, char*[] argv) {
 	// scoped malloc???
 	// defer??
 	// malloc+define call in one?
+
+	char *foo = "foo";
+	heap char *foo = "foo";
+	stack char *foo = "foo";
 }
 

@@ -62,7 +62,8 @@ typedef struct c_type {
 		} adr;
 		struct {
 			struct c_type *of;
-			int size; // -1 = inferred
+			int size_int; // -1 = inferred
+			char *size_identifier; // -1 = inferred
 		} arr;
 		struct {
 			int member_count;
@@ -89,7 +90,7 @@ extern int c_type_simple_names_len;
 bool is_type_mod(const char *str);
 bool is_type(const char *str);
 c_type_simple_modifier get_type_mod(char *target);
-c_type get_type(const char *str);
+c_type *get_type(const char *str);
 void test_mods(c_type target);
 void print_type(c_type target, bool newline);
 

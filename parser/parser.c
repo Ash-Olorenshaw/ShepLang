@@ -23,86 +23,12 @@ FILE *outputFile = NULL;
 		fprintf(outputFile, __VA_ARGS__); \
 }
 
-// void write_type(c_type target, bool newline);
-// void write_type(c_type target, bool newline) {
-// 	if (target.type == C_SIMPLE) {
-// 		switch (target.simple.type) {
-// 			case (INT):
-// 				result_write("int ");
-// 				break;
-// 			case (FLOAT):
-// 				result_write("float ");
-// 				break;
-// 			case (DOUBLE):
-// 				result_write("double ");
-// 				break;
-// 			case (CHAR):
-// 				result_write("char ");
-// 				break;
-// 			case (BOOL):
-// 				result_write("bool ");
-// 				break;
-// 			case (VOID):
-// 				result_write("void ");
-// 				break;
-// 		}
-// 	}
-// 	else if (target.type == C_PTR) {
-// 		result_write("* ");
-// 		write_type(*target.ptr.to, false);
-// 	}
-// 	else if (target.type == C_ADR) {
-// 		result_write("& ");
-// 		write_type(*target.adr.to, false);
-// 	}
-// 	else if (target.type == C_ARR) {
-// 		result_write("[%d] ", target.arr.size);
-// 		write_type(*target.arr.of, false);
-// 	}
-// 	else if (target.type == C_ENM) {
-// 		result_write("enum { ");
-// 		int f_elem = target.enm.member_count - 1;
-// 		for (int i = 0; i < f_elem; i++)
-// 			result_write(" %s = %d, ", ((enm_member*)target.enm.members->items[i])->key, ((enm_member*)target.enm.members->items[i])->val);
-// 		result_write(" %s = %d } ", ((enm_member*)target.enm.members->items[f_elem])->key, ((enm_member*)target.enm.members->items[f_elem])->val);
-// 		
-// 	}
-// 	else if (target.type == C_STRT) {
-// 		result_write("struct {");
-// 		for (int i = 0; i < target.strt.member_count; i++) {
-// 			write_type(*((strt_member*)target.strt.members->items[i])->val, false);
-// 			result_write(" %s;", ((strt_member*)target.strt.members->items[i])->key);
-// 		}
-// 		result_write("}");
-// 	}
-// 	else if (target.type == C_UNN) {
-// 		result_write("union {");
-// 		for (int i = 0; i < target.unn.member_count; i++) {
-// 			write_type(*((strt_member*)target.unn.members->items[i])->val, false);
-// 			result_write(" %s;", ((strt_member*)target.unn.members->items[i])->key);
-// 		}
-// 		result_write("}");
-// 	}
-// 	else if (target.type == C_FN) {
-// 		write_type(*target.fn.type, false);
-// 		result_write("(");
-// 		for (int i = 0; i < target.fn.arg_count; i++) {
-// 			write_type(*((fn_arg*)target.fn.args->items[i])->type, false);
-// 			result_write(",");
-// 		}
-// 		result_write(")");
-// 	}
-// 	else printf("UNKNOWN DATA TYPE... (%d)", target.type);
-//
-// 	if (newline) printf("\n");
-// }
-
-
 void write_variable(c_type *var_type, char *name, bool proto, bool type_only) {
 	string_builder *closing_section = string_builder_create(10);
 	string_builder *start_section = string_builder_create(10);
 	string_builder *mod_section = string_builder_create(10);
 
+	int i;
 	while(var_type != NULL) {
 		switch (var_type->type) {
 			case C_SIMPLE:
@@ -197,8 +123,16 @@ void write_variable(c_type *var_type, char *name, bool proto, bool type_only) {
 				if (!type_only)
 					string_builder_add_c(closing_section, ']');
 
-				if (var_type->arr.size > 0) {
-					char *intstr = int_to_str(var_type->arr.size);
+				if (var_type->arr.size_identifier != NULL) {
+					if (scope_find(var_type->arr.size_identifier, IDENTIFIER_VAR)) {
+						string_builder_add_s(closing_section, var_type->arr.size_identifier);
+					}
+					else {
+						raise_err("Cannot set an array length with unknown identifier '%s'", var_type->arr.size_identifier);
+					}
+				}
+				else if (var_type->arr.size_int > 0) {
+					char *intstr = int_to_str(var_type->arr.size_int);
 					string_builder_add_s(closing_section, intstr);
 					free(intstr);
 				}
@@ -211,28 +145,36 @@ void write_variable(c_type *var_type, char *name, bool proto, bool type_only) {
 				var_type = var_type->arr.of;
 				break;
 			default:
-				printf("ERROR WITH WRITING TYPE: %s\n", c_type_type_names[var_type->type]);
+				// printf("ERROR WITH WRITING TYPE: %s\n", c_type_type_names[var_type->type]);
+				printf("Failed to write type for var: %s\n", name);
 				exit(1);
 				break;
 			// case C_ENM:
-			// 	printf("C_ENM: ");
+			// 	result_write("enum {");
 			// 	for (int i = 0; i < var_type->enm.member_count; i++)
-			// 		printf(" { %s: %d }", ((enm_member*)var_type->enm.members->items[i])->key, ((enm_member*)var_type->enm.members->items[i])->val);
+			// 		result_write(" %s = %d", ((enm_member*)var_type->enm.members->items[i])->key, ((enm_member*)var_type->enm.members->items[i])->val);
+			// 	result_write("}")
 			// 	break;
-			// case C_STRT:
-			// 	printf("C_STRT: ");
-			// 	for (int i = 0; i < var_type->strt.member_count; i++) {
-			// 		printf(" { %s: (", ((strt_member*)var_type->strt.members->items[i])->key);
-			// 		print_type(*((strt_member*)var_type->strt.members->items[i])->val, false);
-			// 		printf(") }");
-			// 	}
-			// case C_UNN:
-			// 	printf("C_UNN: ");
-			// 	for (int i = 0; i < var_type->unn.member_count; i++) {
-			// 		printf(" { %s: (", ((strt_member*)var_type->unn.members->items[i])->key);
-			// 		print_type(*((strt_member*)var_type->unn.members->items[i])->val, false);
-			// 		printf(") }");
-			// 	}
+			case C_STRT:
+				result_write("struct {");
+				strt_member *strt_item;
+				RARRAY_FOREACH(strt_item, var_type->strt.members, i) {
+					result_write("%s", strt_item->key);
+					write_variable(strt_item->val, strt_item->key, false, false);
+					result_write(";")
+				}
+				result_write("}");
+				break;
+			case C_UNN:
+				result_write("union {");
+				strt_member *unn_item;
+				RARRAY_FOREACH(unn_item, var_type->strt.members, i) {
+					result_write("%s", unn_item->key);
+					write_variable(unn_item->val, unn_item->key, false, false);
+					result_write(";")
+				}
+				result_write("}");
+				break;
 			// case C_FN:
 			// 	printf("C_FN: ");
 			// 	print_type(*var_type->fn.type, false);
@@ -259,14 +201,34 @@ void write_variable(c_type *var_type, char *name, bool proto, bool type_only) {
 	// }
 }
 
+rarray *tkns_to_statements(rarray *tkns) {
+	rarray *statements = rarray_create(5, sizeof(tkn_line));
+	rarray *statement = rarray_create(5, sizeof(tkn));
+	int i;
+	tkn *target_tkn;
+	RARRAY_FOREACH(target_tkn, tkns, i) {
+		rarray_add(statement, target_tkn);
+		if ((target_tkn->type == OPERATOR && strcmp(target_tkn->content, ";")) || i == tkns->size - 1) {
+			tkn_line *new_line = malloc(sizeof(tkn_line));
+			new_line->statement.tkns = statement;
+			rarray_add(statements, new_line);
+			if (i < tkns->size - 1)
+				statement = rarray_create(5, sizeof(tkn));
+		}
+	}
+	return statements;
+}
+
+void write_statement(tkn_line *target);
 void write_tkn(tkn *target);
 void write_tkn(tkn *target) {
 	if (target->type == CONTAINER || target->type == OPERATOR_SLICE) {
 		result_write("%s", target->type == CONTAINER ? "(" : "[");
 		int i;
-		tkn *sub_tkn;
-		RARRAY_FOREACH(sub_tkn, target->tkn_content, i)
-			write_tkn(sub_tkn);
+		tkn_line *sub_stmnt;
+		rarray *statements = tkns_to_statements(target->tkn_content);
+		RARRAY_FOREACH(sub_stmnt, statements, i)
+			write_statement(sub_stmnt);
 		result_write("%s", target->type == CONTAINER ? ")" : "]");
 	}
 	else if (target->type == BLOCK_START) {
@@ -288,8 +250,9 @@ void write_statement(tkn_line *target) {
 			if (elem->type == OPERATOR_ASSIGN) {
 				if (i > 0) {
 					tkn *last_tkn = target->statement.tkns->items[i-1];
-					if (last_tkn->type != IDENTIFIER)
+					if (last_tkn->type != IDENTIFIER) {
 						raise_err("Assignment operators require an identifier on the left side of the operator.");
+					}
 					else {
 						identifier *found = scope_find(last_tkn->content, IDENTIFIER_VAR);
 						if (found == NULL) {
@@ -315,30 +278,22 @@ void write_block(tkn_line *target) {
 	switch (target->block.type->type) {
 		case IDENTIFIER_IF:
 			result_write("if");
-			result_write("(");
 			write_tkn(target->block.content);
-			result_write(")");
 			break;
 		case IDENTIFIER_ELSEIF:
 			result_write("else if");
-			result_write("(");
 			write_tkn(target->block.content);
-			result_write(")");
 			break;
 		case IDENTIFIER_ELSE:
 			result_write("else");
 			break;
 		case IDENTIFIER_FOR:
 			result_write("for");
-			result_write("(");
 			write_tkn(target->block.content);
-			result_write(")");
 			break;
 		case IDENTIFIER_WHILE:
 			result_write("while");
-			result_write("(");
 			write_tkn(target->block.content);
-			result_write(")");
 			break;
 		default:
 			fprintf(stderr, "Currently unsupport block type: %s\n", tkn_names[target->block.type->type]);
@@ -480,18 +435,18 @@ int write_tkn_line(tkn_line *line, char *name, bool write_newline) {
 			print_type(*simple_var, false);
 			if (simple_var->type == C_SIMPLE && simple_var->simple.modifiers && simple_var->simple.modifiers->size > 0) {
 				RARRAY_CONTAINS(
-					line->var_definition.type->simple.modifiers, 
-					STACK, 
-					c_type_simple_modifier, 
+					line->var_definition.type->simple.modifiers,
+					STACK,
+					c_type_simple_modifier,
 					var_is_stack
 				);
 				RARRAY_CONTAINS(
-					line->var_definition.type->simple.modifiers, 
-					HEAP, 
-					c_type_simple_modifier, 
+					line->var_definition.type->simple.modifiers,
+					HEAP,
+					c_type_simple_modifier,
 					var_is_heap
 				);
-				if (var_is_stack && var_is_heap) 
+				if (var_is_stack && var_is_heap)
 					raise_err("Vars cannot be defined as both heap and stack.");
 			}
 
@@ -542,13 +497,13 @@ int write_tkn_line(tkn_line *line, char *name, bool write_newline) {
 					result_write("}");
 				}
 				else {
-					result_write(";\n");
+					result_write("\n");
 					RARRAY_FOREACH(var_tkns, line->var_definition.val_lines, i)
 						write_tkn_line(var_tkns, line->var_definition.name, true);
 				}
 			}
 			if (write_newline)
-				result_write(";\n");
+				result_write("\n");
 			break;
 		case FUNC_DEFINITION:
 			// write_type(*line->var_definition.type, false);
@@ -574,13 +529,13 @@ int write_tkn_line(tkn_line *line, char *name, bool write_newline) {
 			if (name == NULL) {
 				write_statement(line);
 				if (write_newline)
-					result_write(";\n");
+					result_write("\n");
 			}
 			else {
 				result_write("%s = ", name);
 				write_statement(line);
 				if (write_newline)
-					result_write(";\n");
+					result_write("\n");
 			}
 			break;
 		case PROTOTYPE:

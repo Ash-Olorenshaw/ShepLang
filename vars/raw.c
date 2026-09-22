@@ -51,14 +51,14 @@ rarray *get_var_elems(const char *line) {
 			start = i + 1;
 		}
 		else if (ch == '*' || ch == '&') {
-			if (start < i-1)
-				rarray_add(raw_elems, NEW_VAR_ELEM(substr(line, start, i-1), start));
+			if (start < i)
+				rarray_add(raw_elems, NEW_VAR_ELEM(substr(line, start, i), start));
 			rarray_add(raw_elems, NEW_VAR_ELEM(strdup((char[]){ ch, '\0' }), i));
 
 			start = i+1;
 		}
 		else if (ch == '[' && isalnum(line[i-1])) {
-			if (start < i-1)
+			if (start < i)
 				rarray_add(raw_elems, NEW_VAR_ELEM(substr(line, start, i), start));
 			start = i;
 			skip_to = seek_char(line, i, ']');

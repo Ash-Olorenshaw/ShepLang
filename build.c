@@ -36,6 +36,7 @@ void build_file(char *main_file, bool debug, char *output_file) {
 		char *debug_args_c[] = { DEBUG_ARGS, NULL };
 		RARRAY_ASSIGN(build_args, debug_args_c);
 	}
+	rarray_add(build_args, NULL);
 
 	int time = run_command((char *const *)build_args->items, ".", false);
 	if (time == -1)
@@ -44,7 +45,6 @@ void build_file(char *main_file, bool debug, char *output_file) {
 }
 
 int main(int argv, const char **argc) {
-
 	args arguments = { .arg_count = argv, .args = argc };
 
 	if (arg_pos("test", arguments) != -1) {
@@ -56,14 +56,14 @@ int main(int argv, const char **argc) {
 		while ((in_file = readdir(tests_dir))) {
 			if (!strcmp(in_file->d_name, "."))
 				continue;
-			if (!strcmp(in_file->d_name, ".."))    
+			if (!strcmp(in_file->d_name, ".."))
 				continue;
 
 			char *testfile_path = malloc(strlen("tests/") + strlen((in_file->d_name)) * sizeof(char));
 			sprintf(testfile_path, "tests/%s", in_file->d_name);
 			char *testfile_bin = malloc(strlen((testfile_path) + strlen(".bin")) * sizeof(char));
 			sprintf(testfile_bin, "%s.bin", testfile_path);
-			
+
 			build_file(testfile_path, arg_pos("debug", arguments) != -1, testfile_bin);
 			char *run_args[] = { testfile_bin, NULL };
 			if (run_command(run_args, ".", false) == -1)
@@ -78,9 +78,19 @@ int main(int argv, const char **argc) {
 	build_file("main.c", arg_pos("debug", arguments) != -1, OUTPUT_FILE);
 
 	if (arg_pos("run", arguments) != -1) {
-		char *run_args[] = { OUTPUT_FILE, "./main.shep", NULL };
-		if (run_command(run_args, ".", false) == -1)
+		char *run_args_c[] = { OUTPUT_FILE, NULL };
+		rarray *run_args = rarray_create(3, sizeof(char *));
+		RARRAY_ASSIGN(run_args, run_args_c);
+		int prog_args = arg_pos("--", arguments);
+
+		if (prog_args > -1)
+			for (int i = prog_args + 1; i < arguments.arg_count; i++)
+				rarray_add(run_args, (void *)arguments.args[i]);
+		rarray_add(run_args, NULL);
+
+		if (run_command((char*const*)run_args->items, ".", false) == -1)
 			exit(1);
+
 		char *rm_args[] = { "rm", OUTPUT_FILE, NULL };
 		if (run_command(rm_args, ".", false) == -1)
 			exit(1);

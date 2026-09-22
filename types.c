@@ -27,7 +27,7 @@ char *c_type_simple_names[6] = {
 };
 
 bool is_type_mod(const char *str) {
-	return 
+	return
 		strcmp(str, "stack") == 0 ||
 		strcmp(str, "heap") == 0 ||
 		strcmp(str, "mutable") == 0 ||
@@ -38,36 +38,48 @@ bool is_type_mod(const char *str) {
 		strcmp(str, "long") == 0;
 }
 
+bool is_cmplx_type(const char *str) {
+	return
+		strcmp(str, "struct") == 0 ||
+		strcmp(str, "enum") == 0 ||
+		strcmp(str, "union") == 0;
+}
+
 bool is_type(const char *str) {
 	return
 		strcmp(str, "int") == 0 ||
 		strcmp(str, "float") == 0 ||
 		strcmp(str, "double") == 0 ||
 		strcmp(str, "char") == 0 ||
-		strcmp(str, "bool") == 0;
+		strcmp(str, "bool") == 0 ||
+		strcmp(str, "void") == 0;
 }
 
-c_type get_type(const char *str) {
-	c_type result = {0};
+c_type *get_type(const char *str) {
+	c_type *result = malloc(sizeof(c_type));
 	if (strcmp(str, "int") == 0) {
-		result.type = C_SIMPLE;
-		result.simple.type = INT;
+		result->type = C_SIMPLE;
+		result->simple.type = INT;
 	}
 	else if (strcmp(str, "float") == 0) {
-		result.type = C_SIMPLE;
-		result.simple.type = FLOAT;
+		result->type = C_SIMPLE;
+		result->simple.type = FLOAT;
 	}
 	else if (strcmp(str, "double") == 0) {
-		result.type = C_SIMPLE;
-		result.simple.type = DOUBLE;
+		result->type = C_SIMPLE;
+		result->simple.type = DOUBLE;
 	}
 	else if (strcmp(str, "char") == 0) {
-		result.type = C_SIMPLE;
-		result.simple.type = CHAR;
+		result->type = C_SIMPLE;
+		result->simple.type = CHAR;
 	}
 	else if (strcmp(str, "bool") == 0) {
-		result.type = C_SIMPLE;
-		result.simple.type = BOOL;
+		result->type = C_SIMPLE;
+		result->simple.type = BOOL;
+	}
+	else if (strcmp(str, "void") == 0) {
+		result->type = C_SIMPLE;
+		result->simple.type = VOID;
 	}
 	else {
 		fprintf(stderr, "%s : ", str);
@@ -180,7 +192,10 @@ void print_type(c_type target, bool newline) {
 		print_type(*target.adr.to, false);
 	}
 	else if (target.type == C_ARR) {
-		printf("C_ARR (%d): ", target.arr.size);
+		if (target.arr.size_identifier == NULL)
+			printf("C_ARR (%d): ", target.arr.size_int);
+		else
+			printf("C_ARR (IDENTIFIER: '%s'): ", target.arr.size_identifier);
 		print_type(*target.arr.of, false);
 	}
 	else if (target.type == C_ENM) {

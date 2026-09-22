@@ -123,13 +123,14 @@ enum {
 			 c == '|' || c == '^' || c == '~' ||
 			 c == '!' || c == '?' || c == ':' ||
 			 c == '.' || c == '[' || c == ']' ||
-			 c == '(' || c == ')' || c == ',' || 
-			 c == '{' || c == '}')
+			 c == '(' || c == ')' || c == ',' ||
+			 c == '{' || c == '}' || c == ';')
 		return CHAR_SYMBOL;
 	return CHAR_UNKNOWN;
 }
 
 char *remove_unnecessary_whitespace(char *str) {
+	int temp_str_len = strlen(str) + 1;
 	char temp_str[strlen(str) + 1];
 	int pos = 0, str_len = strlen(str);
 	int prev_char_type = CHAR_UNKNOWN, next_char_type = CHAR_UNKNOWN;
@@ -144,7 +145,7 @@ char *remove_unnecessary_whitespace(char *str) {
 	}
 	temp_str[pos] = '\0';
 
-	strcpy(str, temp_str);
+	memcpy(str, temp_str, temp_str_len);
 	return str;
 }
 
@@ -192,7 +193,7 @@ bool str_isspace(const char *str) {
 
 // reverse in place
 void str_rev(char *str) {
-    int start = 0, 
+    int start = 0,
 		str_len = strlen(str),
 		end = str_len - 1;
     char c;

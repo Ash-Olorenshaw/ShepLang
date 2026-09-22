@@ -62,8 +62,8 @@ rarray *rarray_slice(rarray *array, int start, int len) {
 int rarray_add(rarray *array, void *item) {
 	if (array->size >= array->max_size && !rarray_resize(array))
 		return 0;
-	else if (item == NULL)
-		raise_err("Failed to add null element to array");
+	// else if (item == NULL)
+	// 	raise_err("Failed to add null element to array");
 
 	array->items[array->size++] = item;
 	return 1;

@@ -23,7 +23,7 @@ c_type *get_var_info(const char *line, char **name) {
 	remove_unnecessary_whitespace(line_copy);
 	rarray *raw_elems = get_var_elems(strdup(line)); // array of var_elem
 
-	printf("VAR INFO: \n");
+	printf("VAR INFO (%s): \n", line);
 	for (int i = 0; i < raw_elems->size; i++)
 		printf("%s\n", ((var_elem *)raw_elems->items[i])->elem);
 

@@ -16,7 +16,7 @@ bool command_exists(const char *command) {
 	bool result;
 
 	sys_command = (char*) malloc(sizeof(char) * (strlen(command) + 24));
-	strcpy(sys_command, "which ");
+	memcpy(sys_command, "which ", strlen("which "));
 	strcat(sys_command, command);
 	strcat(sys_command, " > /dev/null 2>&1");
 
@@ -33,7 +33,7 @@ char *str_join(char *const str_array[]) {
 	result_len += i; // add in spaces and \0
 
 	char *result = (char *) malloc(sizeof(char) * result_len);
-	strcpy(result, str_array[0]);
+	memcpy(result, str_array[0], result_len);
 	i = 1;
 
 	while (str_array[i] != NULL) {
