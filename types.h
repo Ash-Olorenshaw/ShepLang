@@ -84,10 +84,18 @@ typedef struct c_type {
 } c_type;
 
 extern char *c_type_type_names[];
-extern char *c_type_simple_names[];
-extern int c_type_simple_names_len;
+
+#define c_type_simple_names_len 6
+extern char *c_type_simple_names[c_type_simple_names_len];
+
+#define c_type_cmplx_names_len 3
+extern char *c_type_cmplx_names[c_type_cmplx_names_len];
+
+#define c_type_mod_names_len 8
+extern char *c_type_mod_names[c_type_mod_names_len];
 
 bool is_type_mod(const char *str);
+bool is_cmplx_type(const char *str);
 bool is_type(const char *str);
 c_type_simple_modifier get_type_mod(char *target);
 c_type *get_type(const char *str);

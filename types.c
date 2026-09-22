@@ -16,8 +16,7 @@ char *c_type_type_names[] = {
 	"C_FN",
 };
 
-int c_type_simple_names_len = 6;
-char *c_type_simple_names[6] = {
+char *c_type_simple_names[c_type_simple_names_len] = {
 	"int",
 	"float",
 	"double",
@@ -26,33 +25,45 @@ char *c_type_simple_names[6] = {
 	"void",
 };
 
+char *c_type_cmplx_names[c_type_cmplx_names_len] = {
+	"struct",
+	"enum",
+	"union",
+};
+
+char *c_type_mod_names[c_type_mod_names_len] = {
+	"stack",
+	"heap",
+	"mutable",
+	"const",
+	"signed",
+	"unsigned",
+	"short",
+	"long",
+};
+
 bool is_type_mod(const char *str) {
-	return
-		strcmp(str, "stack") == 0 ||
-		strcmp(str, "heap") == 0 ||
-		strcmp(str, "mutable") == 0 ||
-		strcmp(str, "const") == 0 ||
-		strcmp(str, "signed") == 0 ||
-		strcmp(str, "unsigned") == 0 ||
-		strcmp(str, "short") == 0 ||
-		strcmp(str, "long") == 0;
+	for (int i = 0; i < c_type_mod_names_len; i++) {
+		if (strcmp(str, c_type_mod_names[i]) == 0)
+			return true;
+	}
+	return false;
 }
 
 bool is_cmplx_type(const char *str) {
-	return
-		strcmp(str, "struct") == 0 ||
-		strcmp(str, "enum") == 0 ||
-		strcmp(str, "union") == 0;
+	for (int i = 0; i < c_type_cmplx_names_len; i++) {
+		if (strcmp(str, c_type_cmplx_names[i]) == 0)
+			return true;
+	}
+	return false;
 }
 
 bool is_type(const char *str) {
-	return
-		strcmp(str, "int") == 0 ||
-		strcmp(str, "float") == 0 ||
-		strcmp(str, "double") == 0 ||
-		strcmp(str, "char") == 0 ||
-		strcmp(str, "bool") == 0 ||
-		strcmp(str, "void") == 0;
+	for (int i = 0; i < c_type_simple_names_len; i++) {
+		if (strcmp(str, c_type_simple_names[i]) == 0)
+			return true;
+	}
+	return false;
 }
 
 c_type *get_type(const char *str) {

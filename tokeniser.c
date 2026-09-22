@@ -274,26 +274,7 @@ rarray **tokenise_lines(rarray *lines) {
 			tkn *tkn_1 = tkns->items[0];
 			tkn *tkn_last = tkns->items[tkns->size - 1];
 
-			if (tkn_1->type == IDENTIFIER && (
-					strcmp(tkn_1->content, "stack") == 0 ||
-					strcmp(tkn_1->content, "heap") == 0 ||
-					strcmp(tkn_1->content, "mutable") == 0 ||
-					strcmp(tkn_1->content, "struct") == 0 ||
-					strcmp(tkn_1->content, "const") == 0 ||
-					strcmp(tkn_1->content, "union") == 0 ||
-					strcmp(tkn_1->content, "enum") == 0 ||
-					strcmp(tkn_1->content, "signed") == 0 ||
-					strcmp(tkn_1->content, "unsigned") == 0 ||
-					strcmp(tkn_1->content, "short") == 0 ||
-					strcmp(tkn_1->content, "long") == 0 ||
-					strcmp(tkn_1->content, "void") == 0 ||
-					strcmp(tkn_1->content, "int") == 0 ||
-					strcmp(tkn_1->content, "float") == 0 ||
-					strcmp(tkn_1->content, "double") == 0 ||
-					strcmp(tkn_1->content, "char") == 0 ||
-					strcmp(tkn_1->content, "bool") == 0
-				))
-			{
+			if (tkn_1->type == IDENTIFIER && (is_type(tkn_1->content) || is_cmplx_type(tkn_1->content) || is_type_mod(tkn_1->content))) {
 				int i, assignments = 0, assignment_pos = -1;
 				tkn *target;
 				RARRAY_FOREACH(target, tkns, i) {

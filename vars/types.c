@@ -83,7 +83,7 @@ c_type *get_var_type(rarray *raw_elems, bool is_function, char **name) {
 			next_item->arr.of = malloc(sizeof(struct c_type));
 			next_item = next_item->arr.of;
 		}
-		else if (!is_type_mod(elem) && !is_type(elem) && strcmp(elem, "struct") != 0 && strcmp(elem, "enum") != 0 && strcmp(elem, "union") != 0 && str_alnum(elem) && *name == NULL) {
+		else if (!is_type_mod(elem) && !is_type(elem) && !is_cmplx_type(elem) && str_alnum(elem) && *name == NULL) {
 			*name = strdup(elem);
 			if (is_function)
 				break;
