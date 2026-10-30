@@ -27,7 +27,7 @@ void process_compound_type(const char *elements, c_type **result, enum c_type_ty
 			strt_member *member = malloc(sizeof(strt_member));
 			member->key = NULL;
 			member->val = get_var_type(get_var_elems(line), str_find(line, ")(") != -1, &member->key);
-			print_type(*member->val, true);
+			print_type(member->val, true);
 			start = i + 1;
 			if (!rarray_add(*target, member))
 				raise_err("Failed to add item to union/struct type array.");

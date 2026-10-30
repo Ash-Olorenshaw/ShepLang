@@ -34,7 +34,8 @@ rarray *rarray_create(int size, int item_size);
 int rarray_free(rarray *array);
 int rarray_resize(rarray *array);
 int rarray_add(rarray *array, void *item);
+rarray *rarray_dup(rarray *array, void *(*dup_func)(void *og));
 rarray *rarray_slice(rarray *array, int start, int len);
-void *rarray_pop(rarray *array);
+void **rarray_pop(rarray *array);
 
 #endif

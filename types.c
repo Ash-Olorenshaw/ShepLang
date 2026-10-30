@@ -31,9 +31,15 @@ char *c_type_cmplx_names[c_type_cmplx_names_len] = {
 	"union",
 };
 
-char *c_type_mod_names[c_type_mod_names_len] = {
+char *c_type_mod_ptr_names[c_type_mod_ptr_names_len] = {
 	"stack",
 	"heap",
+	"in",
+	"out",
+	"inout"
+};
+
+char *c_type_mod_simple_names[c_type_mod_simple_names_len] = {
 	"mutable",
 	"const",
 	"signed",
@@ -42,9 +48,17 @@ char *c_type_mod_names[c_type_mod_names_len] = {
 	"long",
 };
 
-bool is_type_mod(const char *str) {
-	for (int i = 0; i < c_type_mod_names_len; i++) {
-		if (strcmp(str, c_type_mod_names[i]) == 0)
+bool is_ptr_type_mod(const char *str) {
+	for (int i = 0; i < c_type_mod_ptr_names_len; i++) {
+		if (strcmp(str, c_type_mod_ptr_names[i]) == 0)
+			return true;
+	}
+	return false;
+}
+
+bool is_simple_type_mod(const char *str) {
+	for (int i = 0; i < c_type_mod_simple_names_len; i++) {
+		if (strcmp(str, c_type_mod_simple_names[i]) == 0)
 			return true;
 	}
 	return false;
@@ -100,14 +114,26 @@ c_type *get_type(const char *str) {
 	return result;
 }
 
-c_type_simple_modifier get_type_mod(char *target) {
+// TODO - adjust 'type' type to reflect this "ptr mod" vvv
+c_type_ptr_modifier get_ptr_type_mod(char *target) {
 	if (strcmp(target, "stack") == 0)
 		return STACK;
 	else if (strcmp(target, "heap") == 0)
 		return HEAP;
-	else if (strcmp(target, "mutable") == 0)
-		return MUTABLE;
-	else if (strcmp(target, "signed") == 0)
+	else if (strcmp(target, "in") == 0)
+		return IN;
+	else if (strcmp(target, "out") == 0)
+		return OUT;
+	else if (strcmp(target, "inout") == 0)
+		return INOUT;
+	else {
+		fprintf(stderr, "%s : ", target);
+		raise_err("Failed to parse type modifier that does not exist (not 'stack', 'heap', 'mutable', 'signed', 'unsigned', 'short' or 'long')");
+	}
+}
+
+c_type_simple_modifier get_simple_type_mod(char *target) {
+	if (strcmp(target, "signed") == 0)
 		return SIGNED;
 	else if (strcmp(target, "unsigned") == 0)
 		return UNSIGNED;
@@ -115,11 +141,12 @@ c_type_simple_modifier get_type_mod(char *target) {
 		return SHORT;
 	else if (strcmp(target, "long") == 0)
 		return LONG;
+	else if (strcmp(target, "mutable") == 0)
+		return MUTABLE;
 	else {
 		fprintf(stderr, "%s : ", target);
 		raise_err("Failed to parse type modifier that does not exist (not 'stack', 'heap', 'mutable', 'signed', 'unsigned', 'short' or 'long')");
 	}
-	return NONE;
 }
 
 void free_type(c_type *target) {
@@ -144,27 +171,27 @@ void free_type(c_type *target) {
 	}
 }
 
-void print_type(c_type target, bool newline) {
-	if (target.type == C_SIMPLE) {
+void print_type(c_type *target, bool newline) {
+	if (target->type == C_SIMPLE) {
 		printf("C_SIMPLE: ");
-		if (target.simple.type == INT)
+		if (target->simple.type == INT)
 			printf("INT ");
-		else if (target.simple.type == FLOAT)
+		else if (target->simple.type == FLOAT)
 			printf("FLOAT ");
-		else if (target.simple.type == DOUBLE)
+		else if (target->simple.type == DOUBLE)
 			printf("DOUBLE ");
-		else if (target.simple.type == CHAR)
+		else if (target->simple.type == CHAR)
 			printf("CHAR ");
-		else if (target.simple.type == BOOL)
+		else if (target->simple.type == BOOL)
 			printf("BOOL ");
-		else if (target.simple.type == VOID)
+		else if (target->simple.type == VOID)
 			printf("VOID ");
 
-		if (target.simple.modifiers && target.simple.modifiers->size > 0) {
+		if (target->simple.modifiers && target->simple.modifiers->size > 0) {
 			printf("( ");
 			int i;
 			c_type_simple_modifier *mod;
-			RARRAY_FOREACH(mod, target.simple.modifiers, i) {
+			RARRAY_FOREACH(mod, target->simple.modifiers, i) {
 				switch (*mod) {
 					case NONE:
 						printf("NONE ");
@@ -175,12 +202,6 @@ void print_type(c_type target, bool newline) {
 					case UNSIGNED:
 						printf("UNSIGNED ");
 						break;
-					case STACK:
-						printf("STACK ");
-						break;
-					case HEAP:
-						printf("HEAP ");
-						break;
 					case SHORT:
 						printf("SHORT ");
 						break;
@@ -189,57 +210,83 @@ void print_type(c_type target, bool newline) {
 						break;
 					case MUTABLE:
 						printf("MUTABLE ");
+						break;
 				}
 			}
 			printf(")");
 		}
 	}
-	else if (target.type == C_PTR) {
+	else if (target->type == C_PTR) {
+		if (target->ptr.modifiers->size > 0) {
+			printf("( ");
+			int i;
+			c_type_ptr_modifier *mod;
+			RARRAY_FOREACH(mod, target->ptr.modifiers, i) {
+				switch (*mod) {
+					case IN:
+						printf("IN ");
+						break;
+					case OUT:
+						printf("OUT ");
+						break;
+					case INOUT:
+						printf("INOUT ");
+						break;
+					case STACK:
+						printf("STACK ");
+						break;
+					case HEAP:
+						printf("HEAP ");
+						break;
+				}
+			}
+			printf(")");
+		}
 		printf("C_PTR: ");
-		print_type(*target.ptr.to, false);
+		print_type(target->ptr.to, false);
 	}
-	else if (target.type == C_ADR) {
+	else if (target->type == C_ADR) {
 		printf("C_ADR: ");
-		print_type(*target.adr.to, false);
+		print_type(target->adr.to, false);
 	}
-	else if (target.type == C_ARR) {
-		if (target.arr.size_identifier == NULL)
-			printf("C_ARR (%d): ", target.arr.size_int);
+	else if (target->type == C_ARR) {
+		if (target->arr.size_identifier == NULL)
+			printf("C_ARR (%d): ", target->arr.size_int);
 		else
-			printf("C_ARR (IDENTIFIER: '%s'): ", target.arr.size_identifier);
-		print_type(*target.arr.of, false);
+			printf("C_ARR (IDENTIFIER: '%s'): ", target->arr.size_identifier);
+		print_type(target->arr.of, false);
 	}
-	else if (target.type == C_ENM) {
+	else if (target->type == C_ENM) {
 		printf("C_ENM: ");
-		for (int i = 0; i < target.enm.member_count; i++)
-			printf(" { %s: %d }", ((enm_member*)target.enm.members->items[i])->key, ((enm_member*)target.enm.members->items[i])->val);
+		for (int i = 0; i < target->enm.member_count; i++)
+			printf(" { %s: %d }", ((enm_member*)target->enm.members->items[i])->key, ((enm_member*)target->enm.members->items[i])->val);
 	}
-	else if (target.type == C_STRT) {
+	else if (target->type == C_STRT) {
 		printf("C_STRT: ");
-		for (int i = 0; i < target.strt.member_count; i++) {
-			printf(" { %s: (", ((strt_member*)target.strt.members->items[i])->key);
-			print_type(*((strt_member*)target.strt.members->items[i])->val, false);
+		for (int i = 0; i < target->strt.member_count; i++) {
+			printf(" { %s: (", ((strt_member*)target->strt.members->items[i])->key);
+			print_type(((strt_member*)target->strt.members->items[i])->val, false);
 			printf(") }");
 		}
 	}
-	else if (target.type == C_UNN) {
+	else if (target->type == C_UNN) {
 		printf("C_UNN: ");
-		for (int i = 0; i < target.unn.member_count; i++) {
-			printf(" { %s: (", ((strt_member*)target.unn.members->items[i])->key);
-			print_type(*((strt_member*)target.unn.members->items[i])->val, false);
+		for (int i = 0; i < target->unn.member_count; i++) {
+			printf(" { %s: (", ((strt_member*)target->unn.members->items[i])->key);
+			print_type(((strt_member*)target->unn.members->items[i])->val, false);
 			printf(") }");
 		}
 	}
-	else if (target.type == C_FN) {
+	else if (target->type == C_FN) {
 		printf("C_FN: ");
-		print_type(*target.fn.type, false);
-		for (int i = 0; i < target.fn.arg_count; i++) {
-			printf(" { %s: (", ((fn_arg*)target.fn.args->items[i])->name);
-			print_type(*((fn_arg*)target.fn.args->items[i])->type, false);
+		print_type(target->fn.type, false);
+		for (int i = 0; i < target->fn.arg_count; i++) {
+			printf(" { %s: (", ((fn_arg*)target->fn.args->items[i])->name);
+			print_type(((fn_arg*)target->fn.args->items[i])->type, false);
 			printf(") }");
 		}
 	}
-	else printf("UNKNOWN DATA TYPE... (%d)", target.type);
+	else printf("UNKNOWN DATA TYPE... (%d)", target->type);
 
 	if (newline) printf("\n");
 }

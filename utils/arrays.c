@@ -41,6 +41,20 @@ int rarray_resize(rarray *array) {
 	return 1;
 }
 
+rarray *rarray_dup(rarray *array, void *(*dup_func)(void *og)) {
+	void *elem;
+	int i;
+
+	if (array == NULL)
+		return NULL;
+	rarray *res = rarray_create(array->size, array->item_size);
+	RARRAY_FOREACH(elem, array, i) {
+		rarray_add(res, dup_func(elem));
+	}
+
+	return res;
+}
+
 rarray *rarray_slice(rarray *array, int start, int len) {
 	if (array == NULL || start + len > array->size || start < 0)
 		return NULL;
@@ -70,10 +84,10 @@ int rarray_add(rarray *array, void *item) {
 }
 
 // positive == success
-void *rarray_pop(rarray *array) {
+void **rarray_pop(rarray *array) {
 	if (array->size <= 0)
 		return NULL;
-	void *final = array->items[array->size];
+	void **final = &(array->items[array->size]);
 	array->items[array->size--] = NULL;
 	return final;
 }

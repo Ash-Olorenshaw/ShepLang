@@ -10,6 +10,32 @@
 
 #define MAX_BLOCK_DEPTH 100
 
+char *tkn_type_str[] = {
+	"LITERAL_NUMBER",
+	"LITERAL_CHAR",
+	"LITERAL_STRING",
+	"IDENTIFIER",
+	"IDENTIFIER_IF",
+	"IDENTIFIER_ELSE",
+	"IDENTIFIER_ELSEIF",
+	"IDENTIFIER_WHILE",
+	"IDENTIFIER_FOR",
+	"IDENTIFIER_RETURN",
+	"IDENTIFIER_BREAK",
+	"IDENTIFIER_CONTINUE",
+	"IDENTIFIER_SWITCH",
+	"IDENTIFIER_CASE",
+	"IDENTIFIER_DEFAULT",
+	"IDENTIFIER_GOTO",
+	"IDENTIFIER_SIZEOF",
+	"OPERATOR",
+	"OPERATOR_ASSIGN",
+	"OPERATOR_SLICE",
+	"CONTAINER",
+	"BLOCK_START",
+	"BLOCK_END"
+};
+
 char *tkn_names[] = {
 	"LITERAL_NUMBER",
 	"LITERAL_CHAR",
@@ -45,6 +71,18 @@ char *line_names[] = {
 	"PROTOTYPE",
 	"LABEL",
 };
+
+tkn *tkndup(tkn *target) {
+	tkn *result = malloc(sizeof(tkn));
+	result->type = target->type;
+	result->tkn_content = NULL;
+	result->content = NULL;
+	if (result->type == CONTAINER || result->type == OPERATOR_SLICE)
+		result->tkn_content = rarray_dup(target->tkn_content, (void *(*)(void *))tkndup);
+	else if (result->type != BLOCK_START && result->type != BLOCK_END)
+		result->content = strdup(target->content);
+	return result;
+}
 
 tkn_line *create_tknline(tkn_type type, char *content) {
 	tkn_line *new_tkn = malloc(sizeof(tkn_line));
@@ -274,7 +312,7 @@ rarray **tokenise_lines(rarray *lines) {
 			tkn *tkn_1 = tkns->items[0];
 			tkn *tkn_last = tkns->items[tkns->size - 1];
 
-			if (tkn_1->type == IDENTIFIER && (is_type(tkn_1->content) || is_cmplx_type(tkn_1->content) || is_type_mod(tkn_1->content))) {
+			if (tkn_1->type == IDENTIFIER && (is_type(tkn_1->content) || is_cmplx_type(tkn_1->content) || is_simple_type_mod(tkn_1->content) || is_ptr_type_mod(tkn_1->content))) {
 				int i, assignments = 0, assignment_pos = -1;
 				tkn *target;
 				RARRAY_FOREACH(target, tkns, i) {
@@ -306,6 +344,10 @@ rarray **tokenise_lines(rarray *lines) {
 						new_tkn->var_definition.simple = true;
 						assignment_pos++;
 						new_tkn->var_definition.val = rarray_slice(tkns, assignment_pos, tkns->size - assignment_pos);
+						int j;
+						tkn *var_def_tkn;
+						RARRAY_FOREACH(var_def_tkn, new_tkn->var_definition.val, j)
+							new_tkn->var_definition.val->items[j] = tkndup(var_def_tkn);
 						new_tkn_created = true;
 					}
 				}
@@ -337,7 +379,7 @@ rarray **tokenise_lines(rarray *lines) {
 				tkn_1->type == IDENTIFIER_SWITCH
 			) {
 				new_tkn->type = BLOCK;
-				new_tkn->block.type = tkn_1;
+				new_tkn->block.type = tkndup(tkn_1);
 
 				int content_start = 2;
 
@@ -345,7 +387,7 @@ rarray **tokenise_lines(rarray *lines) {
 					content_start = 3;
 					printf("TKNS: %d, %s\n", tkns->size, ((tkn *)tkns->items[1])->content);
 					if (tkns->size >= 2)
-						new_tkn->block.content = tkns->items[1];
+						new_tkn->block.content = tkndup(tkns->items[1]);
 					else
 						raise_err("Incomplete block statement (if/while/case)");
 				}
@@ -353,7 +395,7 @@ rarray **tokenise_lines(rarray *lines) {
 					new_tkn->block.type->type = IDENTIFIER_ELSEIF;
 					content_start = 4;
 					if (tkns->size > 3)
-						new_tkn->block.content = tkns->items[2];
+						new_tkn->block.content = tkndup(tkns->items[2]);
 					else
 						raise_err("Incomplete block statement (else if)");
 				}
@@ -374,6 +416,10 @@ rarray **tokenise_lines(rarray *lines) {
 					tkn_line *new_line = malloc(sizeof(tkn_line));
 					new_line->type = STATEMENT;
 					new_line->statement.tkns = rarray_slice(tkns, content_start, tkns->size - content_start);
+					int j;
+					tkn *var_def_tkn;
+					RARRAY_FOREACH(var_def_tkn, new_tkn->var_definition.val, j)
+						new_tkn->var_definition.val->items[j] = tkndup(var_def_tkn);
 
 					new_tkn->block.tkn_lines = rarray_create(1, sizeof(tkn_line));
 					rarray_add(new_tkn->block.tkn_lines, new_line);
@@ -388,9 +434,11 @@ rarray **tokenise_lines(rarray *lines) {
 			}
 			else {
 				new_tkn->type = STATEMENT;
-				new_tkn->statement.tkns = tkns;
+				new_tkn->statement.tkns = rarray_dup(tkns, (void *(*)(void *))tkndup);
 				new_tkn_created = true;
 			}
+
+			rarray_free(tkns);
 		}
 
 		if (new_tkn_created) {
@@ -400,6 +448,9 @@ rarray **tokenise_lines(rarray *lines) {
 		new_tkn = malloc(sizeof(tkn_line));
 	}
 
+	for (int i = 0; i < parent_tkns_pos && i > 0; i++) {
+		rarray_free(parent_tkns[i]);
+	}
 	return &parent_tkns[0];
 }
 
@@ -414,7 +465,7 @@ void print_tokenised_line(tkn_line *line, int depth) {
 	switch (line->type) {
 		case (VAR_DEFINITION):
 			printf("VAR DEFINITION: { (%s) : ", line->var_definition.name);
-			print_type(*line->var_definition.type, false);
+			print_type(line->var_definition.type, false);
 			if (line->var_definition.simple) {
 				printf(" (simple) } => \n");
 				RARRAY_FOREACH(elem, line->var_definition.val, i) {
@@ -430,7 +481,7 @@ void print_tokenised_line(tkn_line *line, int depth) {
 			break;
 		case (FUNC_DEFINITION):
 			printf("FUNC DEFINITION: { (%s) : ", line->func_definition.name);
-			print_type(*line->func_definition.type, false);
+			print_type(line->func_definition.type, false);
 			printf(" } => \n");
 			RARRAY_FOREACH(elem_line, line->func_definition.tkn_lines, i) {
 				print_tokenised_line(elem_line, depth + 1);
@@ -458,7 +509,7 @@ void print_tokenised_line(tkn_line *line, int depth) {
 			break;
 		case (PROTOTYPE):
 			printf("PROTOTYPE:  { (%s) : ", line->prototype.name);
-			print_type(*line->prototype.type, false);
+			print_type(line->prototype.type, false);
 			printf(" };\n");
 			break;
 		case (LABEL):

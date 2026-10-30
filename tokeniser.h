@@ -84,6 +84,7 @@ typedef struct {
 
 extern char *tkn_names[];
 extern char *line_names[];
+extern char *tkn_type_str[];
 
 void print_tokenised_line(tkn_line *line, int depth);
 rarray **tokenise(rarray *file_lines);

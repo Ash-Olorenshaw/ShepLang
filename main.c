@@ -8,6 +8,8 @@ int main(int argc, char *argv[]) {
 	rarray *program_lines = get_file_lines(argc < 2 ? "main.c" : argv[1]);
 	rarray **tkns = tokenise(program_lines);
 	parse(*tkns);
+
+	// TODO - foreach free here
 	rarray_free(*tkns);
 
 

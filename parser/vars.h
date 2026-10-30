@@ -3,14 +3,9 @@
 
 #include <stdbool.h>
 #include "../utils/arrays.h"
-
-typedef enum { 
-	IDENTIFIER_VAR,
-	IDENTIFIER_FUNC 
-} identifier_type;
+#include "../vars/types.h"
 
 typedef struct {
-	identifier_type type;
 	enum {
 		IDENTIFIER_UNKNOWN,
 		IDENTIFIER_STACK_ALLOCATED,
@@ -21,14 +16,22 @@ typedef struct {
 		IDENTIFIER_MUTABLE,
 		IDENTIFIER_IMMUTABLE
 	} mutable;
+	enum {
+		IDENTIFIER_UNKNOWN_OWNERSHIP,
+		IDENTIFIER_IN,
+		IDENTIFIER_OUT,
+		IDENTIFIER_INOUT,
+	} ownership;
 	char *name;
+	bool freed;
+	c_type *type;
 } identifier;
 
 extern rarray *identifier_scopes; // identifier
 
 void init_identifier_scopes(void);
 rarray *create_new_scope(void);
-identifier *scope_find(char *target, identifier_type type);
+identifier *scope_find(char *target);
 void add_to_scope(identifier *item);
 void exit_scope(void);
 

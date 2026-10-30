@@ -54,20 +54,31 @@ int main(int argc, char*[] argv) {
 		loop(i + 1);
 	}
 
-	int foo = {
-		if (true) {
-			1;
-		}
+
+	// TODO:
+	// defer/autofree??
+	// get rid of heap/stack??
+	// filter/map/etc
+	// fix inline if
+
+	autofree char *foobar = malloc(200 * sizeof(char));
+	memcpy(foobar, "foobar", strlen("foobar") + 1);
+
+	int filter_fn_test(char c) {
+		if (c == 'o')
+			return true;
+		return false;
 	}
 
+	int foo = if (argc < 0) {
+		1;
+	}
+	else {
+		2;
+	}
+
+	filter(foobar, filter_fn_test);
 
 	return foo;
-	// scoped malloc???
-	// defer??
-	// malloc+define call in one?
-
-	char *foo = "foo";
-	heap char *foo = "foo";
-	stack char *foo = "foo";
 }
 

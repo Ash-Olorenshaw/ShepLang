@@ -19,16 +19,22 @@ typedef struct {
 	int val;
 } enm_member;
 
-typedef enum { // TODO - not implemented (+ we need to do const as well)
+typedef enum {
 	NONE,
 	SIGNED,
 	UNSIGNED,
 	SHORT,
 	LONG,
-	STACK,
-	HEAP,
 	MUTABLE
 } c_type_simple_modifier;
+
+typedef enum { // TODO - const
+	STACK,
+	HEAP,
+	IN,
+	OUT,
+	INOUT,
+} c_type_ptr_modifier;
 
 typedef struct c_type {
 	enum c_type_type {
@@ -52,10 +58,11 @@ typedef struct c_type {
 				VOID,
 			} type;
 			rarray *modifiers; // c_type_simple_modifier
-			rarray *size; // tkn
+			// rarray *size; // tkn
 		} simple;
 		struct {
 			struct c_type *to;
+			rarray *modifiers; // c_type_ptr_modifier
 		} ptr;
 		struct {
 			struct c_type *to;
@@ -91,15 +98,19 @@ extern char *c_type_simple_names[c_type_simple_names_len];
 #define c_type_cmplx_names_len 3
 extern char *c_type_cmplx_names[c_type_cmplx_names_len];
 
-#define c_type_mod_names_len 8
-extern char *c_type_mod_names[c_type_mod_names_len];
+#define c_type_mod_simple_names_len 6
+extern char *c_type_mod_simple_names[c_type_mod_simple_names_len];
 
-bool is_type_mod(const char *str);
+#define c_type_mod_ptr_names_len 5
+extern char *c_type_mod_ptr_names[c_type_mod_ptr_names_len];
+
+bool is_ptr_type_mod(const char *str);
+bool is_simple_type_mod(const char *str);
 bool is_cmplx_type(const char *str);
 bool is_type(const char *str);
-c_type_simple_modifier get_type_mod(char *target);
+c_type_ptr_modifier get_ptr_type_mod(char *target);
+c_type_simple_modifier get_simple_type_mod(char *target);
 c_type *get_type(const char *str);
-void test_mods(c_type target);
-void print_type(c_type target, bool newline);
+void print_type(c_type *target, bool newline);
 
 #endif

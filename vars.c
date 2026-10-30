@@ -36,7 +36,8 @@ c_type *get_var_info(const char *line, char **name) {
 
 	*name = NULL;
 	c_type *result = get_var_type(raw_elems, is_function, name);
-	print_type(*result, true);
+	printf("Created type: %d (%s) for (%s)\n", result->type, *name, line);
+	print_type(result, true);
 
 	// rarray_free(raw_elems); // TODO - this isn't a proper free since each thing is now a struct...
 	free(line_copy);

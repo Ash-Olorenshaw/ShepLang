@@ -1,43 +1,5 @@
 #include <stdio.h>
 
-union foo {
-	struct foo {
-		char *name;
-		c_type *type;
-		bool simple; // true = val, false = val_lines
-		rarray *val; // tkn
-		rarray *val_lines; // tkn_line
-	} var_definition;
-	struct foo {
-		char *name;
-		c_type *type;
-		rarray *tkn_lines; // tkn_line
-	} func_definition;
-	struct foo {
-		tkn *type;
-		tkn *content;
-		rarray *tkn_lines; // tkn_line
-	} block;
-	struct foo {
-		char *content;
-	} macro;
-	struct foo {
-		rarray *tkns; // tkn
-	} statement;
-	struct foo {
-		c_type *type;
-		char *name;
-	} prototype;
-	struct foo {
-		char *name;
-	} label;
-};
-
-union foo {
-	char *content;
-	rarray *tkn_content;
-};
-
 int main() {
 	mutable int n = 0;
 	mutable int i = 0;
@@ -54,8 +16,12 @@ int main() {
 		printf("%d ", a[i]);
 	}
 
+	int foobar(int test) {
+	}
+
 	return 0;
 }
+
 void swap(mutable int * xp, mutable int * yp) {
 	int temp = * xp;
 	* xp = * yp;

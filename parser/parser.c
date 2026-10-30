@@ -9,15 +9,24 @@
 #include "../tokeniser.h"
 #include "../types.h"
 #include "./vars.h"
+#include "./types.h"
 
 FILE *prototypeFile = NULL;
 FILE *outputFile = NULL;
 
+// printf("prototypeFile : %s\n", prototypeFile == NULL ? "null" : "other");
+// printf("Writing:");
+// printf(__VA_ARGS__);
+// printf("\n");
 #define prototype_write(...) { \
 	if (prototypeFile != NULL) \
 		fprintf(prototypeFile, __VA_ARGS__); \
 }
 
+// printf("outputFile : %s\n", outputFile == NULL ? "null" : "other");
+// printf("Writing:");
+// printf(__VA_ARGS__);
+// printf("\n");
 #define result_write(...) { \
 	if (outputFile != NULL) \
 		fprintf(outputFile, __VA_ARGS__); \
@@ -27,9 +36,15 @@ void write_variable(c_type *var_type, char *name, bool proto, bool type_only) {
 	string_builder *closing_section = string_builder_create(10);
 	string_builder *start_section = string_builder_create(10);
 	string_builder *mod_section = string_builder_create(10);
+	identifier *new_identifier = malloc(sizeof(identifier));
 
-	int i;
+	new_identifier->type = var_type;
+	new_identifier->name = strdup(name);
+
 	while(var_type != NULL) {
+		bool signed_set = false;
+		bool length_set = false;
+		int i;
 		switch (var_type->type) {
 			case C_SIMPLE:
 				str_rev(closing_section->string);
@@ -37,20 +52,13 @@ void write_variable(c_type *var_type, char *name, bool proto, bool type_only) {
 				if ((int) var_type->simple.type < c_type_simple_names_len)
 					type_name = c_type_simple_names[var_type->simple.type];
 				else {
-					fprintf(stderr, "UNKNOWN var type: %d\n", var_type->simple.type);
-					exit(1);
+					raise_err("UNKNOWN var type: %d\n", var_type->simple.type);
 				}
 
-				identifier *new_identifier = malloc(sizeof(identifier));
 				new_identifier->mutable = IDENTIFIER_UNKNOWN_MUTABILITY;
-				new_identifier->location = IDENTIFIER_UNKNOWN;
-
-				bool signed_set = false;
-				bool length_set = false;
-				int i;
-				c_type_simple_modifier *mod;
-				RARRAY_FOREACH(mod, var_type->simple.modifiers, i) {
-					switch (*mod) {
+				c_type_simple_modifier *simple_mod;
+				RARRAY_FOREACH(simple_mod, var_type->simple.modifiers, i) {
+					switch (*simple_mod) {
 						case NONE:
 							// UNREACHABLE
 							break;
@@ -65,18 +73,6 @@ void write_variable(c_type *var_type, char *name, bool proto, bool type_only) {
 								raise_err("Var definition cannot specify multiple signed states, pick one: (unsigned, signed)");
 							signed_set = true;
 							string_builder_add_s(mod_section, "unsigned ");
-							break;
-						case STACK:
-							if (new_identifier->mutable == IDENTIFIER_UNKNOWN)
-								new_identifier->mutable = IDENTIFIER_STACK_ALLOCATED;
-							else
-								raise_err("Var definition cannot repeat allocation specifiers, pick one: (heap, stack)");
-							break;
-						case HEAP:
-							if (new_identifier->mutable == IDENTIFIER_UNKNOWN)
-								new_identifier->mutable = IDENTIFIER_HEAP_ALLOCATED;
-							else
-								raise_err("Var definition cannot repeat allocation specifiers, pick one: (heap, stack)");
 							break;
 						case SHORT:
 							if (length_set)
@@ -95,22 +91,61 @@ void write_variable(c_type *var_type, char *name, bool proto, bool type_only) {
 								new_identifier->mutable = IDENTIFIER_MUTABLE;
 							else
 								raise_err("Var definition cannot repeat mutability specifiers");
-
 					}
 				}
 				if (new_identifier->mutable == IDENTIFIER_UNKNOWN_MUTABILITY)
 					new_identifier->mutable = IDENTIFIER_IMMUTABLE;
-
 				result_write("%s %s %s%s%s", mod_section->string, type_name, start_section->string, name, closing_section->string);
 				if (proto)
 					prototype_write("%s %s %s%s%s", mod_section->string, type_name, start_section->string, name, closing_section->string);
 				var_type = NULL;
 
-				new_identifier->name = strdup(name);
-				new_identifier->type = IDENTIFIER_VAR;
-				add_to_scope(new_identifier);
 				break;
 			case C_PTR:
+
+				new_identifier->ownership = IDENTIFIER_UNKNOWN_OWNERSHIP;
+				new_identifier->location = IDENTIFIER_UNKNOWN;
+				new_identifier->freed = false;
+
+				c_type_ptr_modifier *ptr_mod;
+				RARRAY_FOREACH(ptr_mod, var_type->ptr.modifiers, i) {
+					switch (*ptr_mod) {
+						case IN:
+							if (new_identifier->ownership == IDENTIFIER_UNKNOWN_OWNERSHIP)
+								new_identifier->ownership = IDENTIFIER_IN;
+							else
+								raise_err("Var definition cannot repeat ownership specifiers, pick one: (in, out, inout)");
+							break;
+						case INOUT:
+							if (new_identifier->ownership == IDENTIFIER_UNKNOWN_OWNERSHIP)
+								new_identifier->ownership = IDENTIFIER_INOUT;
+							else
+								raise_err("Var definition cannot repeat ownership specifiers, pick one: (in, out, inout)");
+							break;
+						case OUT:
+							if (new_identifier->ownership == IDENTIFIER_UNKNOWN_OWNERSHIP)
+								new_identifier->ownership = IDENTIFIER_OUT;
+							else
+								raise_err("Var definition cannot repeat ownership specifiers, pick one: (in, out, inout)");
+							break;
+						case STACK:
+							if (new_identifier->location == IDENTIFIER_UNKNOWN)
+								new_identifier->location = IDENTIFIER_STACK_ALLOCATED;
+							else
+								raise_err("Var definition cannot repeat allocation specifiers, pick one: (heap, stack)");
+							break;
+						case HEAP:
+							if (new_identifier->location == IDENTIFIER_UNKNOWN)
+								new_identifier->location = IDENTIFIER_HEAP_ALLOCATED;
+							else
+								raise_err("Var definition cannot repeat allocation specifiers, pick one: (heap, stack)");
+							break;
+					}
+				}
+
+				if (new_identifier->ownership == IDENTIFIER_UNKNOWN_OWNERSHIP)
+					new_identifier->ownership = IDENTIFIER_INOUT;
+
 				string_builder_add_c(start_section, '*');
 				string_builder_add_c(start_section, '(');
 				string_builder_add_c(closing_section, ')');
@@ -124,7 +159,8 @@ void write_variable(c_type *var_type, char *name, bool proto, bool type_only) {
 					string_builder_add_c(closing_section, ']');
 
 				if (var_type->arr.size_identifier != NULL) {
-					if (scope_find(var_type->arr.size_identifier, IDENTIFIER_VAR)) {
+					if (scope_find(var_type->arr.size_identifier)) {
+						// check type
 						string_builder_add_s(closing_section, var_type->arr.size_identifier);
 					}
 					else {
@@ -146,8 +182,7 @@ void write_variable(c_type *var_type, char *name, bool proto, bool type_only) {
 				break;
 			default:
 				// printf("ERROR WITH WRITING TYPE: %s\n", c_type_type_names[var_type->type]);
-				printf("Failed to write type for var: %s\n", name);
-				exit(1);
+				raise_err("Failed to write type for var: %s\n", name);
 				break;
 			// case C_ENM:
 			// 	result_write("enum {");
@@ -186,6 +221,8 @@ void write_variable(c_type *var_type, char *name, bool proto, bool type_only) {
 		}
 	}
 
+	add_to_scope(new_identifier);
+
 	// result_write(target->var_definition.name);
 	// printf("VAR DEFINITION: { (%s) : ", );
 	// print_type(*line->var_definition.type, false);
@@ -199,6 +236,10 @@ void write_variable(c_type *var_type, char *name, bool proto, bool type_only) {
 	// 		print_tokenised_line(elem_line, depth + 1);
 	// 	}
 	// }
+
+	string_builder_free(&closing_section);
+	string_builder_free(&start_section);
+	string_builder_free(&mod_section);
 }
 
 rarray *tkns_to_statements(rarray *tkns) {
@@ -237,8 +278,11 @@ void write_tkn(tkn *target) {
 	else if (target->type == BLOCK_END) {
 		result_write("}");
 	}
-	else {
+	else if (target->content) {
 		result_write("%s", target->content);
+	}
+	else {
+		raise_err("Failed to write: %s (%s)\n", target->content, tkn_type_str[target->type]);
 	}
 }
 
@@ -247,23 +291,34 @@ void write_statement(tkn_line *target) {
 		tkn *elem;
 		int i;
 		RARRAY_FOREACH(elem, target->statement.tkns, i) {
-			if (elem->type == OPERATOR_ASSIGN) {
+			if (elem->type == CONTAINER && i > 0) {
+				tkn *last_tkn = target->statement.tkns->items[i-1];
+				if (last_tkn->type == IDENTIFIER) {
+					identifier *found = scope_find(last_tkn->content);
+					if (!found)
+						raise_err("Failed to find identifier '%s' in current scope", last_tkn->content);
+					if (found->type->type == C_FN) {
+						if (!compare_function_args(found->type->fn.args, elem))
+							raise_err("Function called with incorrect arguments: '%s'", last_tkn->content);
+					}
+				}
+			}
+			else if (elem->type == OPERATOR_ASSIGN) {
 				if (i > 0) {
 					tkn *last_tkn = target->statement.tkns->items[i-1];
 					if (last_tkn->type != IDENTIFIER) {
 						raise_err("Assignment operators require an identifier on the left side of the operator.");
 					}
 					else {
-						identifier *found = scope_find(last_tkn->content, IDENTIFIER_VAR);
-						if (found == NULL) {
-							fprintf(stderr, "%s : ", last_tkn->content);
-							raise_err("Failed to find variable identifier");
-						}
-						else {
+						identifier *found = scope_find(last_tkn->content);
+						if (found) {
 							if (found->mutable != IDENTIFIER_MUTABLE) {
 								fprintf(stderr, "%s : ", found->name);
 								raise_err("Reassigning immutable variable. Mark variable with 'mutable' to be able to change it.");
 							}
+						}
+						else {
+							raise_err("Failed to find var identifier '%s'", last_tkn->content);
 						}
 					}
 				}
@@ -296,8 +351,7 @@ void write_block(tkn_line *target) {
 			write_tkn(target->block.content);
 			break;
 		default:
-			fprintf(stderr, "Currently unsupport block type: %s\n", tkn_names[target->block.type->type]);
-			exit(1);
+			raise_err("Currently unsupport block type: %s\n", tkn_names[target->block.type->type]);
 	}
 }
 
@@ -309,27 +363,27 @@ void write_function(tkn_line *target) {
 	if (func_type->type == C_FN)
 		func_type = func_type->fn.type;
 	else
-		raise_err("incomplete function signature does not contain arguments.");
+		raise_err("incomplete function signature does not contain arguments (%s).", c_type_type_names[func_type->type]);
+
+	c_type_ptr_modifier *ptr_mod;
+	c_type_simple_modifier *simple_mod;
+	identifier *new_identifier = malloc(sizeof(identifier));
+	new_identifier->name = strdup(target->func_definition.name);
+	new_identifier->type = func_type;
 
 	while(func_type != NULL) {
+		bool signed_set = false;
+		bool length_set = false;
+		int i;
 		switch (func_type->type) {
 			case C_SIMPLE:
 				if ((int) func_type->simple.type < c_type_simple_names_len)
 					type_name = c_type_simple_names[func_type->simple.type];
-				else {
-					fprintf(stderr, "UNKNOWN function type: %d\n", func_type->simple.type);
-					exit(1);
-				}
-				identifier *new_identifier = malloc(sizeof(identifier));
-				new_identifier->mutable = IDENTIFIER_UNKNOWN_MUTABILITY;
-				new_identifier->location = IDENTIFIER_UNKNOWN;
+				else
+					raise_err("UNKNOWN function type: %d\n", func_type->simple.type);
 
-				bool signed_set = false;
-				bool length_set = false;
-				int i;
-				c_type_simple_modifier *mod;
-				RARRAY_FOREACH(mod, func_type->simple.modifiers, i) {
-					switch (*mod) {
+				RARRAY_FOREACH(simple_mod, func_type->simple.modifiers, i) {
+					switch (*simple_mod) {
 						case NONE:
 							// UNREACHABLE
 							break;
@@ -344,18 +398,6 @@ void write_function(tkn_line *target) {
 								raise_err("Func definition cannot specify multiple signed states, pick one: (unsigned, signed)");
 							signed_set = true;
 							string_builder_add_s(mod_section, "unsigned ");
-							break;
-						case STACK:
-							if (new_identifier->mutable == IDENTIFIER_UNKNOWN)
-								new_identifier->mutable = IDENTIFIER_STACK_ALLOCATED;
-							else
-								raise_err("Func definition cannot repeat allocation specifiers, pick one: (heap, stack)");
-							break;
-						case HEAP:
-							if (new_identifier->mutable == IDENTIFIER_UNKNOWN)
-								new_identifier->mutable = IDENTIFIER_HEAP_ALLOCATED;
-							else
-								raise_err("Func definition cannot repeat allocation specifiers, pick one: (heap, stack)");
 							break;
 						case SHORT:
 							if (length_set)
@@ -374,21 +416,43 @@ void write_function(tkn_line *target) {
 								new_identifier->mutable = IDENTIFIER_MUTABLE;
 							else
 								raise_err("Func definition cannot repeat mutability specifiers");
-
 					}
 				}
+
 				if (new_identifier->mutable == IDENTIFIER_UNKNOWN_MUTABILITY)
 					new_identifier->mutable = IDENTIFIER_IMMUTABLE;
-
-				new_identifier->name = strdup(target->func_definition.name);
-				new_identifier->type = IDENTIFIER_FUNC;
-				add_to_scope(new_identifier);
 
 				result_write("%s %s %s%s", mod_section->string, type_name, start_section->string, target->func_definition.name);
 				prototype_write("%s %s %s%s", mod_section->string, type_name, start_section->string, target->func_definition.name);
 				func_type = NULL;
 				break;
 			case C_PTR:
+				new_identifier->location = IDENTIFIER_UNKNOWN;
+				new_identifier->freed = false;
+
+				RARRAY_FOREACH(ptr_mod, func_type->ptr.modifiers, i) {
+					switch (*ptr_mod) {
+						case STACK:
+							if (new_identifier->location == IDENTIFIER_UNKNOWN)
+								new_identifier->location = IDENTIFIER_STACK_ALLOCATED;
+							else
+								raise_err("Func definition cannot repeat allocation specifiers, pick one: (heap, stack)");
+							break;
+						case HEAP:
+							if (new_identifier->location == IDENTIFIER_UNKNOWN)
+								new_identifier->location = IDENTIFIER_HEAP_ALLOCATED;
+							else
+								raise_err("Func definition cannot repeat allocation specifiers, pick one: (heap, stack)");
+							break;
+						case IN:
+						case INOUT:
+						case OUT:
+							raise_err("Function cannot be specified as in, out, or inout.");
+							break;
+					}
+				}
+				if (new_identifier->location == IDENTIFIER_UNKNOWN)
+					printf("WARN - function is returning a pointer to an assumed stack address : %s\n", target->func_definition.name);
 				string_builder_add_c(start_section, '*');
 				func_type = func_type->ptr.to;
 				break;
@@ -397,18 +461,18 @@ void write_function(tkn_line *target) {
 			case C_ARR:
 				raise_err("Cannot return an array from a function, use a pointer instead.");
 			default:
-				printf("ERROR WITH WRITING TYPE: %s\n", c_type_type_names[func_type->type]);
-				exit(1);
+				raise_err("WITH WRITING TYPE: %s\n", c_type_type_names[func_type->type]);
 				break;
 		}
 	}
+	add_to_scope(new_identifier);
 	result_write("(");
 	prototype_write("(");
 
 	int i;
 	fn_arg *arg;
 	RARRAY_FOREACH(arg, target->func_definition.type->fn.args, i) {
-		write_variable(arg->type, arg->name, true, false);
+		write_variable(arg->type, (char *) arg->name, true, false);
 		if (i < target->func_definition.type->fn.arg_count - 1) {
 			result_write(",");
 			prototype_write(",");
@@ -416,6 +480,9 @@ void write_function(tkn_line *target) {
 	}
 	result_write(")");
 	prototype_write(");\n");
+
+	string_builder_free(&start_section);
+	string_builder_free(&mod_section);
 }
 
 int write_tkn_line(tkn_line *line, char *name, bool write_newline);
@@ -432,53 +499,50 @@ int write_tkn_line(tkn_line *line, char *name, bool write_newline) {
 			bool var_is_stack = false;
 			bool var_is_heap = false;
 			c_type *simple_var = (line->var_definition.type);
-			print_type(*simple_var, false);
-			if (simple_var->type == C_SIMPLE && simple_var->simple.modifiers && simple_var->simple.modifiers->size > 0) {
+			// print_type(simple_var, false);
+			if (simple_var->type == C_PTR && simple_var->ptr.modifiers && simple_var->ptr.modifiers->size > 0) {
 				RARRAY_CONTAINS(
-					line->var_definition.type->simple.modifiers,
+					line->var_definition.type->ptr.modifiers,
 					STACK,
-					c_type_simple_modifier,
+					c_type_ptr_modifier,
 					var_is_stack
 				);
 				RARRAY_CONTAINS(
-					line->var_definition.type->simple.modifiers,
+					line->var_definition.type->ptr.modifiers,
 					HEAP,
-					c_type_simple_modifier,
+					c_type_ptr_modifier,
 					var_is_heap
 				);
 				if (var_is_stack && var_is_heap)
-					raise_err("Vars cannot be defined as both heap and stack.");
+					raise_err("Pointer cannot be defined as both heap and stack.");
 			}
 
 			tkn *var_tkn;
 			tkn_line *var_tkns;
 			if (line->var_definition.simple) {
+				// TODO - exchange this logic here to use "write_statement" instead
 				result_write(" = \n");
-				if (var_is_heap) {
-					result_write(" = \n");
-					c_type *var_type = line->var_definition.type;
-					while(var_type != NULL) {
-						switch (var_type->type) {
-							case C_SIMPLE:
-								break;
-							case C_PTR:
-								break;
-							case C_ARR:
-								break;
-							case C_ADR:
-								break;
-							case C_ENM:
-							case C_STRT:
-							case C_UNN:
-							case C_FN:
-								printf(">>>>>> TODO\n\n\n");
-								break;
+				RARRAY_FOREACH(var_tkn, line->var_definition.val, i) {
+					write_tkn(var_tkn);
+					if (var_tkn->type == IDENTIFIER) {
+						identifier *var_identifier = scope_find(var_tkn->content);
+						if (var_identifier) {
+							if (var_identifier->type->type == C_FN) {
+								if (i < line->var_definition.val->size - 1) {
+									tkn *next_tkn = line->var_definition.val->items[++i];
+									if (next_tkn->type == CONTAINER) {
+										if (!compare_function_args(var_identifier->type->fn.args, next_tkn))
+											raise_err("Function called with incorrect arguments: '%s'", var_tkn->content);
+									}
+									else raise_err("Unexpected function identifier with no arguments: '%s'", var_tkn->content);
+								}
+								else raise_err("Unexpected function identifier with no arguments: '%s'", var_tkn->content);
+							}
+						}
+						else {
+							raise_err("Unable to find identifier '%s' in scope", var_tkn->content);
 						}
 					}
-				}
-				else {
-					RARRAY_FOREACH(var_tkn, line->var_definition.val, i)
-						write_tkn(var_tkn);
 				}
 			}
 			else {
@@ -571,6 +635,8 @@ int parse(rarray *tkn_lines) {
 	RARRAY_FOREACH(line, tkn_lines, i) {
 		write_tkn_line(line, NULL, true);
 	}
+	exit_scope();
 
+	printf("Finished writing.");
 	return 0;
 }
