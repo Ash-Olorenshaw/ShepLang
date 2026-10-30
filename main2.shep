@@ -1,45 +1,14 @@
 #include <stdio.h>
 
-int main() {
-	mutable int n = 0;
-	mutable int i = 0;
-	printf("Enter the number of elements ");
-	scanf("%d",&n);
-	int a[n] = {};
-	printf("Enter the elements ");
-	for (i = 0; i < n; i++) {
-		scanf("%d",&a[i]);
-	}
+out void *malloc(out int size) {}
+void free(in void *target) {}
 
-	selectionSort(a, n);
-	for (i = 0; i < n; i++) {
-		printf("%d ", a[i]);
-	}
+int main(int argc, char *argv[]) {
 
-	int foobar(int test) {
-	}
+	char *foo = malloc(5);
+	free(foo);
 
 	return 0;
 }
 
-void swap(mutable int * xp, mutable int * yp) {
-	int temp = * xp;
-	* xp = * yp;
-	* yp = temp;
-}
-
-void selectionSort(int arr[], int n) {
-	mutable int i = 0;
-	mutable int j = 0;
-	mutable int min_idx = 0;
-	for (i = 0; i < n - 1; i++) {
-		min_idx = i;
-		for (j = i + 1; j < n; j++) {
-			if (arr[j] < arr[min_idx]) {
-				min_idx = j;
-			}
-		}
-		swap( & arr[min_idx], & arr[i]);
-	}
-}
 
